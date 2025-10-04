@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include data/*.json
+include data/*.txt
+recursive-include ogmsServer2/data *.tif
+recursive-include ogmsServer2/data */*.tif
+exclude __pycache__
+exclude *.py[co]
+exclude .DS_Store
+
+
