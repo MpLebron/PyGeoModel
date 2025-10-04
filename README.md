@@ -56,10 +56,6 @@ With AI-powered model suggestions, contextual academic knowledge integration, an
   <tr></tr>
 </table>
 
-## Features
-
-<img width="100%" src='screenshots/features-demo.gif'>
-
 ## Get Started
 
 ### Live Demo
