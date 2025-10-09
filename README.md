@@ -93,7 +93,7 @@ PyGeoModel is built with a modular architecture that combines [ipywidgets](https
 
 ## Credits
 
-PyGeoModel is a result of collaboration between researchers from multiple institutions. PyGeoModel is created by <a href='mailto:llonggis@163.com' target='_blank'>Peilong Ma</a>, <a href='#' target='_blank'>Min Chen</a>, <a href='#' target='_blank'>Dichen Liu</a>, and other contributors from Nanjing Normal University.
+PyGeoModel is a result of collaboration between researchers from multiple institutions. PyGeoModel is created by <a href='mailto:llonggis@163.com' target='_blank'>Peilong Ma</a>, Min Chen, Dichen Liu, and other contributors from Nanjing Normal University.
 
 ## Citation
 
