@@ -1,6 +1,6 @@
 # PyGeoModel
 
-[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/yourusername/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接)
+[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接)
 
 An intelligent Python package for geographic modeling within Jupyter 🌱
 
@@ -111,7 +111,7 @@ To learn more about PyGeoModel, please read our [research paper](您的论文链
 
 ## License
 
-- The software is available under the [MIT License](https://github.com/yourusername/PyGeoModel/blob/main/LICENSE).
+- The software is available under the [MIT License](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE).
 - The model configurations and examples are provided for research and educational purposes.
 
 ## Contact
