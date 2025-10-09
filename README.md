@@ -87,66 +87,6 @@ modeler.suggest_model()
 modeler.invoke_model("SWAT_Model")
 ```
 
-### Jupyter Notebook Integration
-
-If you use Jupyter Notebook for geographic modeling research, you can easily integrate PyGeoModel into your workflow.
-
-1. Install PyGeoModel: `pip install PyGeoModel`
-2. Import and initialize: `from PyGeoModel import GeoModeler`
-3. Start modeling: `modeler = GeoModeler()`
-4. Explore models interactively with the GUI interface
-
-## Integrating PyGeoModel into Modeling Workflows
-
-If you are a researcher or practitioner working with geographic models, you can easily integrate PyGeoModel into your existing workflows regardless of your preferred environment (Jupyter, Colab, VS Code).
-
-First, install PyGeoModel:
-
-```bash
-pip install PyGeoModel
-```
-
-Then, you can use PyGeoModel in your notebooks:
-
-```python
-from PyGeoModel import GeoModeler
-
-# Initialize the modeling environment
-modeler = GeoModeler()
-
-# Display interactive model browser
-modeler.show_models()
-
-# Get intelligent recommendations
-modeler.suggest_model()
-
-# Invoke specific models
-modeler.invoke_model("Roof Photovoltaic Carbon Emission Reduction Potential Assessment Model")
-```
-
-## Developing PyGeoModel
-
-Clone or download this repository:
-
-```bash
-git clone git@github.com:yourusername/PyGeoModel.git
-```
-
-Install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Then run PyGeoModel in development mode:
-
-```bash
-pip install -e .
-jupyter notebook
-```
-
-Navigate to your Jupyter environment. You should see PyGeoModel working in your notebooks :)
-
 ## How is PyGeoModel Built?
 
 PyGeoModel is built with a modular architecture that combines [ipywidgets](https://ipywidgets.readthedocs.io/) for interactive interfaces, [asyncio](https://docs.python.org/3/library/asyncio.html) for asynchronous operations, and integration with external services. PyGeoModel uses [OpenAI API](https://openai.com/api/) and [Dify API](https://dify.ai/) for intelligent recommendations. The model execution is powered by [OGMS](http://geomodeling.njnu.edu.cn/) (Open Geographic Modeling Service). The academic integration leverages [Consensus API](https://consensus.app/) for real-time paper search. The computational notebook support is optimized for [Jupyter](https://jupyter.org/) environments.
