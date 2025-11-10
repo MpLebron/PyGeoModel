@@ -68,7 +68,7 @@ For a live demo, visit: <您的演示链接>. -->
 
 If you use computational notebooks (e.g., Jupyter Notebook, JupyterLab, Google Colab, VS Code Notebook), you can easily use PyGeoModel via its Python Package.
 
-Visit this [Colab Notebook](您的Colab链接) for a demo.
+<!-- Visit this [Colab Notebook](您的Colab链接) for a demo. -->
 
 ```python
 # Install PyGeoModel
