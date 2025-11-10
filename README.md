@@ -1,6 +1,8 @@
 # PyGeoModel
 
-[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接)
+[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) 
+<!-- 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接) -->
 
 An intelligent Python package for urban modeling within Jupyter 🌱
 
