@@ -2,23 +2,23 @@
 
 [![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接)
 
-An intelligent Python package for geographic modeling within Jupyter 🌱
+An intelligent Python package for urban modeling within Jupyter 🌱
 
 <table>
   <tr>
     <td colspan="3"><a href="您的演示链接"><img width="100%" src='statics/showModels.png'></a></td>
   </tr>
   <tr></tr>
-  <tr align="center">
+  <!-- <tr align="center">
     <td><a href="您的演示链接">🚀 Live Demo</a></td>
     <td><a href="您的视频链接">📺 Talk Video</a></td>
     <td><a href="您的论文链接">📖 Research Paper</a></td>
-  </tr>
+  </tr> -->
 </table>
 
 ## What is PyGeoModel?
 
-PyGeoModel is an intelligent geographic modeling toolkit that provides **smart model recommendations** and **interactive GUI interfaces** for Jupyter Notebook environments.
+PyGeoModel is an intelligent urban modeling toolkit that provides **smart model recommendations** and **interactive GUI interfaces** for Jupyter Notebook environments.
 With AI-powered model suggestions, contextual academic knowledge integration, and intuitive parameter configuration, PyGeoModel empowers researchers and practitioners to conduct geographic modeling more efficiently and intelligently.
 
 <table>
@@ -58,9 +58,9 @@ With AI-powered model suggestions, contextual academic knowledge integration, an
 
 ## Get Started
 
-### Live Demo
+<!-- ### Live Demo
 
-For a live demo, visit: <您的演示链接>.
+For a live demo, visit: <您的演示链接>. -->
 
 ### Computational Notebook
 
@@ -95,7 +95,7 @@ PyGeoModel is built with a modular architecture that combines [ipywidgets](https
 
 PyGeoModel is a result of collaboration between researchers from multiple institutions. PyGeoModel is created by <a href='mailto:llonggis@163.com' target='_blank'>Peilong Ma</a>, Min Chen, Dichen Liu, and other contributors from Nanjing Normal University.
 
-## Citation
+<!-- ## Citation
 
 To learn more about PyGeoModel, please read our [research paper](您的论文链接).
 
@@ -107,7 +107,7 @@ To learn more about PyGeoModel, please read our [research paper](您的论文链
   year={2025},
   url={您的论文链接}
 }
-```
+``` -->
 
 ## License
 
