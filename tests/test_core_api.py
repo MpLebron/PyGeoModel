@@ -126,6 +126,18 @@ class CoreApiTests(unittest.TestCase):
 
         self.assertTrue(hasattr(widget, "children"))
 
+    def test_error_sanitizer_masks_api_tokens(self):
+        from pygeomodel import GeoModeler
+
+        modeler = GeoModeler(client=FakeClient())
+        message = "Incorrect API key provided: sk-test1234567890. Authorization: Bearer abc.def"
+        sanitized = modeler._sanitize_error_message(message)
+
+        self.assertNotIn("sk-test1234567890", sanitized)
+        self.assertNotIn("abc.def", sanitized)
+        self.assertIn("sk-***", sanitized)
+        self.assertIn("Bearer ***", sanitized)
+
 
 if __name__ == "__main__":
     unittest.main()

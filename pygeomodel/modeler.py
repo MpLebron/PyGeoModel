@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -196,7 +197,13 @@ class GeoModeler:
                 metadata_answer = completion.choices[0].message.content or metadata_answer
                 raw_response = {"source": "openai", "model": "gpt-4.1-nano"}
             except Exception as exc:
-                raw_response = {"source": "metadata_fallback", "openai_error": str(exc)}
+                raw_response = {
+                    "source": "metadata_fallback",
+                    "openai_error": {
+                        "type": exc.__class__.__name__,
+                        "message": "OpenAI request failed; using metadata fallback.",
+                    },
+                }
         result = QAResult(
             question=question,
             rewritten_question=rewritten,
@@ -260,6 +267,11 @@ class GeoModeler:
             f"Listed inputs include: {inputs}.\n"
             f"Listed outputs include: {outputs}."
         )
+
+    def _sanitize_error_message(self, message: str) -> str:
+        sanitized = re.sub(r"sk-[A-Za-z0-9_*-]{8,}", "sk-***", message)
+        sanitized = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***", sanitized)
+        return sanitized
 
     def _display_recommendation(self, recommendation: RecommendationResult) -> None:
         try:
