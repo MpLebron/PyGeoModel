@@ -49,12 +49,18 @@ class OGMSTask(Service):
 
     ######################## private################################
     def _uploadData(self, pathList: dict):
+        from pathlib import Path
+
         inputs = {}
         for category, files in pathList.items():
             inputs[category] = {}
             for key, value in files.items():
-                # Check if it's a numeric parameter or file parameter
-                if isinstance(value, (str, int, float)) and not str(value).startswith('/'):
+                file_path = Path(str(value)).expanduser() if isinstance(value, str) else None
+                is_file = bool(file_path and file_path.exists())
+                is_scalar = isinstance(value, (str, int, float, bool)) and not is_file
+                # Check if it's a scalar parameter or file parameter. Relative file paths
+                # must be treated as files when they exist on disk.
+                if is_scalar:
                     # Numeric parameter: generate XML, upload and return URL; keep children for value filling
                     xml_content = self._create_value_xml(str(key), str(value))
                     xml_url = self._upload_xml_string(
@@ -66,8 +72,8 @@ class OGMSTask(Service):
                     }
                 else:
                     # File parameter: upload file and get URL
-                    file_path = str(value)
-                    file_name = file_path.split("/")[-1]
+                    file_path = str(file_path if file_path else value)
+                    file_name = Path(file_path).name
                     inputs[category][key] = {
                         "name": file_name,
                         "url": self._getUploadData(file_path),
@@ -171,7 +177,8 @@ class OGMSTask(Service):
             # Check if it's a numeric parameter (has children but no URL)
             is_numeric_param = "children" in event and not event.get("url")
 
-            if event.get("optional") == "False":
+            optional = str(event.get("optional")).lower()
+            if optional == "false":
                 # Required field
                 if is_numeric_param:
                     # Numeric parameter: only check children and suffix
@@ -186,7 +193,7 @@ class OGMSTask(Service):
                         errors.append(f"{event_name} has invalid transfer data!")
                     if not event.get("suffix"):
                         errors.append(f"{event_name} has invalid file!")
-            elif event.get("optional") == "True":
+            elif optional == "true":
                 # Optional field
                 if event.get("url") or event.get("suffix") or "children" in event:
                     if not (event.get("url") and event.get("suffix")):
@@ -206,7 +213,7 @@ class OGMSTask(Service):
                 if event_errors:
                     errors.extend(event_errors)
                 else:
-                    if event.get("optional") == "True":
+                    if str(event.get("optional")).lower() == "true":
                         if not (
                             event.get("url")
                             or event.get("suffix")
@@ -285,6 +292,8 @@ class OGMSAccess(Service):
         PV.v_empty(params, "Params")
         task = OGMSTask(self.originLists, self.token)
         if task.configInputData(params) and self._subscribeTask(task):
+            self.last_task = task
+            self.task_id = task.tid
             result = task.wait4Status()
             self.outputs = result["outputs"]
             return self.outputs

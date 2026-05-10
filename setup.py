@@ -14,16 +14,14 @@ setup(
     version="1.0.4",
     author="Peilong Ma",
     author_email="mpl_gis@nnu.edu.cn",
-    description="A Python package for geographic modeling.",
+    description="A Python package for integrating OpenGMS geographic model services.",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     url="https://github.com/MpLebron/PyGeoModel",
-    py_modules=["scripts", "pygeomodel"],
-    packages=find_packages(),
+    py_modules=["scripts"],
+    packages=find_packages(include=["pygeomodel", "pygeomodel.*", "ogmsServer2", "ogmsServer2.*"]),
     package_data={
-        '': ['data/*.json', 'data/*.txt', 'config/*.json'],
-        'ogmsServer2': ['data/*.tif', 'data/*/*.tif'],
-        'config': ['*.json'],
+        'pygeomodel': ['data/*.json', 'data/*.txt'],
     },
     include_package_data=True,
     install_requires=[
@@ -38,6 +36,9 @@ setup(
         "nbformat>=5.1.0",
         "tenacity>=8.0.0"
     ],
+    extras_require={
+        "test": ["pytest>=8.0"],
+    },
     python_requires=">=3.8",
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -51,5 +52,5 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
     ],
-    keywords="geographic modeling, GIS, machine learning, model recommendation, geospatial analysis, jupyter",
+    keywords="geographic modeling, GIS, OpenGMS, model services, geospatial analysis, jupyter",
 )

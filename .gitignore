@@ -3,10 +3,13 @@
 
 # API keys config - DO NOT commit to git
 config/api_keys.json
+.env
 
 # Python
 __pycache__/
 *.py[cod]
+*.pyd
+*.c
 *$py.class
 *.so
 .Python

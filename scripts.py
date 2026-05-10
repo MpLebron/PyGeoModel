@@ -1,7 +1,7 @@
 import requests
 import tenacity
 from openai import OpenAI
-import config
+from pygeomodel.config import get_llm_config
 
 
 class AcademicQueryService:
@@ -10,9 +10,9 @@ class AcademicQueryService:
                  base_url: str = None):
         # Use config if no explicit keys provided
         if api_key is None or base_url is None:
-            default_api_key, default_base_url = config.get_openai_config()
-            api_key = api_key or default_api_key
-            base_url = base_url or default_base_url
+            default_config = get_llm_config()
+            api_key = api_key or default_config.openai_api_key
+            base_url = base_url or default_config.openai_base_url
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.modelingContext = modelingContext
 

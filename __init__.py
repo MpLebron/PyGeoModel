@@ -1,8 +1,26 @@
-"""
-PyGeoModel - An intelligent Python package for geographic modeling in Jupyter.
-"""
+"""Compatibility exports for source-tree imports."""
 
-from pygeomodel import GeoModeler, Model
+from pygeomodel import (
+    GeoModeler,
+    ModelInput,
+    ModelOutput,
+    ModelService,
+    ModelSummary,
+    OpenGMSClient,
+    QAResult,
+    RecommendationResult,
+    TaskResult,
+)
 
 __version__ = "1.0.4"
-__all__ = ["GeoModeler", "Model"]
+__all__ = [
+    "GeoModeler",
+    "ModelInput",
+    "ModelOutput",
+    "ModelService",
+    "ModelSummary",
+    "OpenGMSClient",
+    "QAResult",
+    "RecommendationResult",
+    "TaskResult",
+]
