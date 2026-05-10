@@ -15,9 +15,9 @@ LastEditTime: 2024-09-08 11:46:51
 # exceptions.py
 
 
-# 基础自定义异常类
+# Base custom exception class
 class MyBaseError(Exception):
-    """自定义基础异常类"""
+    """Custom base exception class."""
 
     def __init__(self, message, error_code=None):
         super().__init__(message)
@@ -30,7 +30,7 @@ class MyBaseError(Exception):
             return self.args[0]
 
 
-# 具体的自定义异常类
+# Specific custom exception classes
 class NotValueError(MyBaseError):
     """data is none"""
 

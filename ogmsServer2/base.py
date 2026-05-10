@@ -5,7 +5,6 @@ LastEditors: DiChen
 LastEditTime: 2024-09-11 18:37:16
 """
 
-import sys
 from . import constants as C
 from .openUtils.http_client import HttpClient
 
@@ -22,8 +21,7 @@ class Service:
         self.managerUrl = C.baseManagerUrl
         self.dataUrl = C.baseDataUrl
         if not (self.portalUrl or self.managerUrl or self.dataUrl):
-            print("读取配置文件有误，请联系管理员！")
-            sys.exit(1)
+            raise RuntimeError("Configuration error: Portal/Manager/Data URL not configured. Please contact administrator.")
         self._validateToken()
 
     #########################private#########################################
@@ -34,5 +32,4 @@ class Service:
             )
         ).get("json", {})
         if res.get("data") != 1:
-            print("token无效，请联系管理员！")
-            sys.exit(1)
+            raise RuntimeError("Invalid token. Please contact administrator.")

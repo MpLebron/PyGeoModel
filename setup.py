@@ -12,17 +12,18 @@ def read_readme():
 setup(
     name="PyGeoModel",
     version="1.0.4",
-    author="Your Name",  # 请替换为您的姓名
-    author_email="your.email@example.com",  # 请替换为您的邮箱
-    description="An intelligent Python toolkit for geographic modeling with smart model recommendations",
+    author="Peilong Ma",
+    author_email="mpl_gis@nnu.edu.cn",
+    description="A Python package for geographic modeling.",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/PyGeoModel",  # 请替换为您的GitHub仓库
-    py_modules=["scripts"],
+    url="https://github.com/MpLebron/PyGeoModel",
+    py_modules=["scripts", "pygeomodel"],
     packages=find_packages(),
     package_data={
-        'PyGeoModel': ['data/*.json', 'data/*.txt'],
+        '': ['data/*.json', 'data/*.txt', 'config/*.json'],
         'ogmsServer2': ['data/*.tif', 'data/*/*.tif'],
+        'config': ['*.json'],
     },
     include_package_data=True,
     install_requires=[

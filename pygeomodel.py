@@ -7,11 +7,11 @@ import weakref
 import sys
 from typing import Dict, List, Optional
 
-# 延迟导入所有可能缺失的模块
+# Lazy import modules that may not be installed
 
 
 def _lazy_import_ipywidgets():
-    """延迟导入ipywidgets"""
+    """Lazy import ipywidgets."""
     global widgets
     if 'widgets' not in globals():
         import ipywidgets as widgets
@@ -19,36 +19,44 @@ def _lazy_import_ipywidgets():
 
 
 def _lazy_import_ipython_display():
-    """延迟导入IPython display"""
+    """Lazy import IPython display."""
     global display, HTML, clear_output
     if 'display' not in globals():
         from IPython.display import display, HTML, clear_output
     return display, HTML, clear_output
 
 
-# 基本模块
+# Basic modules
 
 
 def _lazy_import_ipython():
-    """延迟导入IPython"""
+    """Lazy import IPython."""
     global get_ipython
     if 'get_ipython' not in globals():
         from IPython import get_ipython
     return get_ipython
 
-# 延迟导入 - 只在需要时导入
+# Lazy imports - only import when needed
 
 
 def _lazy_import_openmodel():
-    """延迟导入openModel模块"""
+    """Lazy import openModel module."""
     global openModel
     if 'openModel' not in globals():
         import ogmsServer2.openModel as openModel
     return openModel
 
 
+def _lazy_import_config():
+    """Lazy import config module."""
+    global config
+    if 'config' not in globals():
+        import config
+    return config
+
+
 def _lazy_import_requests():
-    """延迟导入requests"""
+    """Lazy import requests."""
     global requests
     if 'requests' not in globals():
         import requests
@@ -56,7 +64,7 @@ def _lazy_import_requests():
 
 
 def _lazy_import_academic_service():
-    """延迟导入学术查询服务"""
+    """Lazy import academic query service."""
     global AcademicQueryService
     if 'AcademicQueryService' not in globals():
         from scripts import AcademicQueryService
@@ -64,7 +72,7 @@ def _lazy_import_academic_service():
 
 
 def _lazy_import_openai():
-    """延迟导入OpenAI"""
+    """Lazy import OpenAI."""
     global OpenAI
     if 'OpenAI' not in globals():
         from openai import OpenAI
@@ -72,7 +80,7 @@ def _lazy_import_openai():
 
 
 def _lazy_import_filechooser():
-    """延迟导入FileChooser"""
+    """Lazy import FileChooser."""
     global FileChooser
     if 'FileChooser' not in globals():
         from ipyfilechooser import FileChooser
@@ -80,7 +88,7 @@ def _lazy_import_filechooser():
 
 
 def _lazy_import_markdown():
-    """延迟导入markdown"""
+    """Lazy import markdown."""
     global markdown, Markdown
     if 'markdown' not in globals():
         from markdown import markdown
@@ -89,40 +97,40 @@ def _lazy_import_markdown():
 
 
 def _lazy_import_nest_asyncio():
-    """延迟导入nest_asyncio"""
+    """Lazy import nest_asyncio."""
     global nest_asyncio
     if 'nest_asyncio' not in globals():
         import nest_asyncio
     return nest_asyncio
 
 
-# 在文件开头应用nest_asyncio（如果可用）
+# Apply nest_asyncio at file start (if available)
 try:
     _lazy_import_nest_asyncio().apply()
 except ImportError:
-    # 如果nest_asyncio不可用，跳过
+    # Skip if nest_asyncio is not available
     pass
 
-# 工具函数
+# Utility functions
 
 
 def cleanup_memory():
-    """清理内存的工具函数"""
+    """Utility function to clean up memory."""
     gc.collect()
-    # 清理弱引用 - 使用更安全的方式
+    # Clean weak references - use safer approach
     try:
-        # 尝试清理弱引用，如果失败则跳过
+        # Try to clean weak references, skip if failed
         if hasattr(weakref, '_weakrefs'):
             for obj in list(weakref._weakrefs):
                 if obj() is None:
                     weakref._weakrefs.remove(obj)
     except (AttributeError, RuntimeError):
-        # 如果weakref._weakrefs不存在或访问失败，则跳过
+        # Skip if weakref._weakrefs doesn't exist or access failed
         pass
 
 
 def safe_import(module_name):
-    """安全导入模块"""
+    """Safely import a module."""
     try:
         return __import__(module_name)
     except ImportError:
@@ -130,14 +138,14 @@ def safe_import(module_name):
 
 
 class Model:
-    """模型基类,用于处理模型的基本属性和操作"""
+    """Model base class for handling model properties and operations."""
 
     def __init__(self, model_name, model_data):
         mdl_json = model_data.get("mdlJson", {})
         mdl = mdl_json.get("mdl", {})
 
         self.id = model_data.get("_id", "")
-        self.name = model_name  # 使用键名作为型名称
+        self.name = model_name  # Use key name as model name
         self.description = model_data.get("description", "")
         self.author = model_data.get("author", "")
         self.tags = model_data.get("normalTags", [])
@@ -147,41 +155,41 @@ class Model:
 
 
 class GeoModeler:
-    """智能地理建模助手,负责模型管理、推荐和交互界面"""
+    """Intelligent geographic modeling assistant for model management, recommendation and UI."""
 
     def __init__(self):
-        # 内存管理相关
-        self._instances = weakref.WeakSet()  # 跟踪实例
+        # Memory management
+        self._instances = weakref.WeakSet()  # Track instances
         self._instances.add(self)
 
-        # 模型数据 - 轻量级管理
-        self.models = {}  # 存储已加载的模型（按需加载）
-        self.model_names = []  # 存储所有模型名称
-        self._model_cache = {}  # 模型数据缓存
-        self._max_cache_size = 10  # 最大缓存模型数量
+        # Model data - lightweight management
+        self.models = {}  # Store loaded models (loaded on demand)
+        self.model_names = []  # Store all model names
+        self._model_cache = {}  # Model data cache
+        self._max_cache_size = 10  # Maximum cache size
 
-        # UI状态
+        # UI state
         self.current_model = None
-        self.widgets = {}  # 存储界面组件
+        self.widgets = {}  # Store UI components
         self.page_size = 20
         self.current_page = 1
         self.filtered_models = []
 
-        # 上下文数据 - 延迟加载
+        # Context data - lazy loading
         self._context_cache = {}
-        self._context_cache_timeout = 300  # 5分钟缓存
+        self._context_cache_timeout = 300  # 5-minute cache
 
-        # 初始化
+        # Initialize
         self._load_model_names()
 
-        # 注册清理函数
+        # Register cleanup function
         import atexit
         atexit.register(self._cleanup)
 
     def _cleanup(self):
-        """清理资源"""
+        """Clean up resources."""
         try:
-            # 清理界面组件
+            # Clean UI components
             for widget_key in list(self.widgets.keys()):
                 if widget_key in self.widgets:
                     widget = self.widgets[widget_key]
@@ -189,25 +197,25 @@ class GeoModeler:
                         widget.close()
                     del self.widgets[widget_key]
 
-            # 清理模型缓存
+            # Clean model cache
             self.models.clear()
             self._model_cache.clear()
             self._context_cache.clear()
 
-            # 清理弱引用
+            # Clean weak references
             cleanup_memory()
 
         except Exception as e:
-            print(f"清理过程中出现错误: {e}")
+            print(f"Error during cleanup: {e}")
 
     def __del__(self):
-        """析构函数"""
+        """Destructor."""
         if hasattr(self, '_instances'):
             self._instances.discard(self)
         self._cleanup()
 
     def _load_model_names(self):
-        """轻量级加载 - 只加载模型名称，不加载完整数据"""
+        """Lightweight load - only load model names, not full data."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         json_path = os.path.join(current_dir, "data", "computeModel.json")
 
@@ -220,7 +228,7 @@ class GeoModeler:
             self.model_names = []
 
     def _load_models(self):
-        """加载所有模型的完整数据（保留原有方法作为兼容性接口）"""
+        """Load full data for all models (kept for backward compatibility)."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         json_path = os.path.join(current_dir, "data", "computeModel.json")
 
@@ -234,12 +242,12 @@ class GeoModeler:
             self.models = {}
 
     def load_model_on_demand(self, model_name):
-        """按需加载特定模型（带缓存和内存管理）"""
-        # 检查是否已加载
+        """Load specific model on demand (with cache and memory management)."""
+        # Check if already loaded
         if model_name in self.models:
             return self.models[model_name]
 
-        # 检查缓存
+        # Check cache
         if model_name in self._model_cache:
             model_data = self._model_cache[model_name]
             self.models[model_name] = Model(model_name, model_data)
@@ -249,7 +257,7 @@ class GeoModeler:
             print(f"Model '{model_name}' not found")
             return None
 
-        # 从文件加载特定模型数据
+        # Load specific model data from file
         current_dir = os.path.dirname(os.path.abspath(__file__))
         json_path = os.path.join(current_dir, "data", "computeModel.json")
 
@@ -259,16 +267,16 @@ class GeoModeler:
                 if model_name in models_data:
                     model_data = models_data[model_name]
 
-                    # 添加到缓存
+                    # Add to cache
                     if len(self._model_cache) >= self._max_cache_size:
-                        # 移除最旧的缓存项
+                        # Remove oldest cache entry
                         oldest_key = next(iter(self._model_cache))
                         del self._model_cache[oldest_key]
 
                     self._model_cache[model_name] = model_data
                     self.models[model_name] = Model(model_name, model_data)
 
-                    # 定期清理内存
+                    # Periodically clean up memory
                     if len(self.models) % 5 == 0:
                         cleanup_memory()
 
@@ -278,15 +286,15 @@ class GeoModeler:
             return None
 
     def show_models(self):
-        """显示模型列表界面"""
+        """Display model list interface."""
         widgets = _lazy_import_ipywidgets()
         main_widget = widgets.HBox(layout=widgets.Layout(width='100%'))
 
-        # 创建左侧面板
+        # Create left panel
         left_panel = widgets.VBox(
             layout=widgets.Layout(width='300px', margin='10px'))
 
-        # 创建搜索框
+        # Create search box
         search_box = widgets.Text(
             placeholder='Search...',
             description='Search:',
@@ -294,69 +302,69 @@ class GeoModeler:
         )
         search_box.observe(self._on_search, 'value')
 
-        # 创建分页导航容器
+        # Create pagination navigation container
         self.widgets['nav_box'] = widgets.HBox(layout=widgets.Layout(
             width='100%',
             margin='5px 0',
             justify_content='space-between'
         ))
 
-        # 创建模型列表容器
+        # Create model list container
         self.widgets['model_list'] = widgets.VBox(
             layout=widgets.Layout(width='100%'))
 
-        # 组装左侧面板
+        # Assemble left panel
         left_panel.children = [
             search_box,
             self.widgets['nav_box'],
             self.widgets['model_list']
         ]
 
-        # 建右侧模型详情面板
+        # Create right panel for model details
         right_panel = widgets.VBox(
             layout=widgets.Layout(flex='1', margin='10px'))
         self.widgets['model_detail_area'] = right_panel
 
         main_widget.children = [left_panel, right_panel]
 
-        # 初始显示
+        # Initial display
         self._update_model_list()
 
         return main_widget
 
     def suggest_model(self):
-        """显示模型推荐上下文数据（优化内存使用）"""
-        # 定期清理内存
+        """Display model recommendation context data (optimized memory usage)."""
+        # Periodically clean up memory
         cleanup_memory()
 
-        # 创建 NotebookContext 实例（使用缓存）
+        # Create NotebookContext instance (using cache)
         import time
         cache_key = "notebook_context"
         current_time = time.time()
 
         if (cache_key in self._context_cache and
                 current_time - self._context_cache[cache_key]['time'] < self._context_cache_timeout):
-            # 使用缓存的上下文
+            # Use cached context
             context_data = self._context_cache[cache_key]['data']
         else:
-            # 创建新的上下文并缓存
+            # Create new context and cache it
             notebook_context = NotebookContext()
             context_data = {
                 "modeling_history": notebook_context.history_context,
                 "data_context": notebook_context.data_context
             }
 
-            # 更新缓存
+            # Update cache
             self._context_cache[cache_key] = {
                 'data': context_data,
                 'time': current_time
             }
 
-            # 清理notebook_context对象
+            # Clean up notebook_context object
             del notebook_context
             cleanup_memory()
 
-        # 显示加载状态
+        # Display loading state
         loading_html = """
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
             <div class="loading-spinner"></div>
@@ -380,54 +388,56 @@ class GeoModeler:
         loading_display = display(HTML(loading_html), display_id='loading')
 
         try:
-            # 调用API获取模型推荐
+            # Call API to get model recommendations
             requests = _lazy_import_requests()
             import json
 
-            # API配置
-            api_url = 'https://api.dify.ai/v1/workflows/run'  # 根据实际URL调整
-            api_key = 'app-CuNONc6hSct2ap07nmUgcaw9'
+            # API configuration
+            cfg = _lazy_import_config()
+            dify_api_key, dify_base_url = cfg.get_dify_config()
+            api_url = f'{dify_base_url}/workflows/run'
+            api_key = dify_api_key
 
-            # 准备请求数据
+            # Prepare request data
             payload = {
                 "inputs": {
                     "modeling_history": context_data["modeling_history"],
                     "data_context": context_data["data_context"]
                 },
-                "response_mode": "blocking",  # 使用阻塞模式
-                "user": "jupyter_user"  # 用户标识符
+                "response_mode": "blocking",  # Use blocking mode
+                "user": "jupyter_user"  # User identifier
             }
 
-            # 设置请求头
+            # Set request headers
             headers = {
                 'Authorization': f'Bearer {api_key}',
                 'Content-Type': 'application/json'
             }
 
-            # 发送POST请求
+            # Send POST request
             response = requests.post(api_url, headers=headers, json=payload)
 
-            # 清除加载状态
+            # Clear loading state
             loading_display.update(HTML(''))
 
-            # 处理响应
+            # Process response
             if response.status_code == 200:
                 result = response.json()
 
-                # 根据API响应解析结果 - 纠正解析路径
+                # Parse result based on API response - correct parsing path
                 if 'data' in result and 'outputs' in result['data']:
-                    # 直接获取API返回的对象，这是一个完整的JSON对象，不是文本
+                    # Get API returned object directly, this is a complete JSON object, not text
                     recommendation_data = result['data']['outputs']
 
-                    # 检查是否直接包含model_recommendation字段
+                    # Check if model_recommendation field is directly included
                     if 'model_recommendation' in recommendation_data:
                         model_rec = recommendation_data['model_recommendation']
                         recommended_data = recommendation_data.get(
                             'recommended_data', {})
                     else:
-                        # 如果不是直接包含，可能是第二层嵌套的文本，需要解析
+                        # If not directly included, may be nested text, need to parse
                         try:
-                            # 尝试解析text字段中的JSON
+                            # Try to parse JSON in text field
                             text_content = recommendation_data.get(
                                 'text', '{}')
                             if isinstance(text_content, str):
@@ -443,19 +453,19 @@ class GeoModeler:
                             model_rec = {}
                             recommended_data = {}
 
-                    # 从model_rec中提取信息
+                    # Extract info from model_rec
                     model_name = model_rec.get('name', 'Unknown Model')
                     model_desc = model_rec.get('description', 'No Description')
                     key_strengths = model_rec.get('key_strengths', [])
                     rec_reason = model_rec.get('recommendation_reason', '')
                     app_scenario = model_rec.get('application_scenario', '')
 
-                    # 从recommended_data中提取信息
+                    # Extract info from recommended_data
                     local_data = recommended_data.get('local_data', [])
                     kb_data = recommended_data.get('knowledge_base_data', [])
 
-                    if model_name != 'Unknown Model':  # 确保我们至少有模型名称
-                        # 构建优美的HTML展示
+                    if model_name != 'Unknown Model':  # Ensure we have at least a model name
+                        # Build elegant HTML display
                         html_output = f"""
                         <style>
                             .model-rec-container {{
@@ -586,7 +596,7 @@ class GeoModeler:
                                 </div>
                         """
 
-                        # 添加推荐数据部分
+                        # Add recommended data section
                         if local_data or kb_data:
                             html_output += """
                                 <div class="model-rec-section" style="grid-column: 1 / -1;">
@@ -594,7 +604,7 @@ class GeoModeler:
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             """
 
-                            # 添加本地数据列
+                            # Add local data column
                             html_output += """
                                 <div>
                                     <div style="font-weight: 500; color: #1e293b; margin-bottom: 8px; font-size: 14px;">Local Data:</div>
@@ -615,7 +625,7 @@ class GeoModeler:
                                 """
                             html_output += "</div>"
 
-                            # 添加知识库数据列
+                            # Add knowledge base data column
                             html_output += """
                                 <div>
                                     <div style="font-weight: 500; color: #1e293b; margin-bottom: 8px; font-size: 14px;">Data Center Data:</div>
@@ -641,26 +651,26 @@ class GeoModeler:
                                 """
                             html_output += "</div>"
 
-                            # 关闭数据资源的网格容器
+                            # Close grid container for data resources
                             html_output += """
                                     </div>
                                 </div>
                             """
 
-                        # 关闭容器div
+                        # Close container div
                         html_output += """
                             </div>
                         </div>
                         """
 
-                        # 显示结果
+                        # Display result
                         display(HTML(html_output))
                     else:
-                        # 处理无模型推荐的情况
+                        # Handle case with no model recommendation
                         error_msg = "No valid model recommendation information found in API response"
                         self._display_error_message(error_msg)
 
-                        # 显示原始数据以便调试
+                        # Show raw data for debugging
                         debug_html = f"""
                         <details>
                             <summary style="cursor: pointer; color: #6b7280; margin: 10px 0;">Show Raw API Response Data</summary>
@@ -671,11 +681,11 @@ class GeoModeler:
                         """
                         display(HTML(debug_html))
                 else:
-                    # 处理API返回格式不符预期的情况
+                    # Handle API response format not meeting expectations
                     error_msg = "API response data format does not meet expectations"
                     self._display_error_message(error_msg)
 
-                    # 显示原始数据以便调试
+                    # Show raw data for debugging
                     debug_html = f"""
                     <details>
                                                     <summary style="cursor: pointer; color: #6b7280; margin: 10px 0;">Show Raw API Response Data</summary>
@@ -690,17 +700,17 @@ class GeoModeler:
                 self._display_error_message(error_msg)
 
         except Exception as e:
-            # 清除加载状态
+            # Clear loading state
 
-            # 显示错误信息
+            # Display error message
             self._display_error_message(
                 f"Model recommendation service call failed: {str(e)}")
 
-        # 不返回任何值，避免在Jupyter中显示不必要的调试信息
+        # Don't return any value to avoid unnecessary debug info in Jupyter
         return None
 
     def _display_error_message(self, message):
-        """显示错误信息"""
+        """Display error message."""
         from IPython.display import HTML, display
         error_html = f"""
         <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 15px; margin: 10px 0; border-radius: 4px; color: #b91c1c;">
@@ -711,7 +721,7 @@ class GeoModeler:
         display(HTML(error_html))
 
     def _show_running_spinner(self):
-        """在右侧面板顶部显示运行中动画"""
+        """Display running animation at top of right panel."""
         display, HTML, _ = _lazy_import_ipython_display()
         spinner_html = (
             "<div id=\"ogms-running\" style=\"display:flex;align-items:center;gap:10px;margin:6px 0;\">"
@@ -724,44 +734,44 @@ class GeoModeler:
         display(HTML(spinner_html))
 
     def _hide_running_spinner(self):
-        """移除运行中动画（如果环境支持DOM更新，Notebook多次刷新会清除）"""
-        # 简单实现：不做任何事，新的输出会覆盖旧内容
+        """Remove running animation (if env supports DOM update, Notebook refresh will clear it)."""
+        # Simple implementation: do nothing, new output will overwrite old content
         pass
 
     def _update_model_list(self, filter_text=''):
-        """更新模型列表"""
-        # 更新过滤后的模型列表（轻量级搜索，只基于模型名称）
+        """Update model list."""
+        # Update filtered model list (lightweight search, based on model names only)
         if filter_text.strip() == "":
-            # 无搜索条件时显示所有模型
+            # Show all models when no search condition
             self.filtered_models = sorted(self.model_names)
         else:
-            # 有搜索条件时基于模型名称过滤
+            # Filter based on model name when search condition exists
             self.filtered_models = [
                 model_name for model_name in sorted(self.model_names)
                 if filter_text.lower() in model_name.lower()
             ]
 
-        # 重置页码
+        # Reset page number
         self.current_page = 1
 
-        # 更新显示
+        # Update display
         self._refresh_display()
 
     def _refresh_display(self):
-        """刷新当前页面显示"""
-        # 计算页面信息
+        """Refresh current page display."""
+        # Calculate page info
         total_models = len(self.filtered_models)
         total_pages = max(
             1, (total_models + self.page_size - 1) // self.page_size)
         start_idx = (self.current_page - 1) * self.page_size
         end_idx = min(start_idx + self.page_size, total_models)
 
-        # 更新导航按钮和页面息
+        # Update navigation buttons and page info
         prev_button = widgets.Button(
             description='Previous',
             disabled=self.current_page == 1,
             layout=widgets.Layout(width='80px'),
-            style=widgets.ButtonStyle(button_color='#e2e8f0')  # 添加柔和的背景色
+            style=widgets.ButtonStyle(button_color='#e2e8f0')  # Add soft background color
         )
         prev_button.on_click(self._prev_page)
 
@@ -769,7 +779,7 @@ class GeoModeler:
             description='Next',
             disabled=self.current_page == total_pages,
             layout=widgets.Layout(width='80px'),
-            style=widgets.ButtonStyle(button_color='#e2e8f0')  # 添加柔和的背景色
+            style=widgets.ButtonStyle(button_color='#e2e8f0')  # Add soft background color
         )
         next_button.on_click(self._next_page)
 
@@ -780,19 +790,19 @@ class GeoModeler:
         self.widgets['nav_box'].children = [
             prev_button, page_info, next_button]
 
-        # 更新模型列表
+        # Update model list
         model_buttons = []
         for model_name in self.filtered_models[start_idx:end_idx]:
             button = widgets.Button(
                 description=model_name,
                 layout=widgets.Layout(
                     width='100%',
-                    margin='3px 0',  # 增加按钮间距
-                    padding='6px 10px'  # 增加按钮内边距
+                    margin='3px 0',  # Increase button spacing
+                    padding='6px 10px'  # Increase button padding
                 ),
                 style=widgets.ButtonStyle(
-                    button_color='white',  # 按钮背景色
-                    font_weight='normal'  # 字体粗细
+                    button_color='white',  # Button background color
+                    font_weight='normal'  # Font weight
                 )
             )
             button.on_click(self._on_model_button_clicked)
@@ -801,13 +811,13 @@ class GeoModeler:
         self.widgets['model_list'].children = tuple(model_buttons)
 
     def _prev_page(self, b):
-        """转到上一页"""
+        """Go to previous page."""
         if self.current_page > 1:
             self.current_page -= 1
             self._refresh_display()
 
     def _next_page(self, b):
-        """转到下一页"""
+        """Go to next page."""
         total_pages = (len(self.filtered_models) +
                        self.page_size - 1) // self.page_size
         if self.current_page < total_pages:
@@ -815,25 +825,25 @@ class GeoModeler:
             self._refresh_display()
 
     def _on_search(self, change):
-        """处理搜索事件"""
+        """Handle search event."""
         search_text = change['new']
         self._update_model_list(search_text)
 
     def _on_model_button_clicked(self, button):
-        """处理模型按钮点击事件"""
+        """Handle model button click event."""
         model_name = button.description
-        # print(f"点击了模型: {model_name}")  # 调试信息
+        # print(f"Clicked model: {model_name}")  # Debug info
 
-        # 在右侧面板显示模型界面
+        # Display model interface in right panel
         self._show_model_in_panel(model_name)
 
     def _show_model_in_panel(self, model_name):
-        """在侧面板中显示模型界面"""
+        """Display model interface in side panel."""
         if model_name not in self.model_names:
             print(f"Error: Model '{model_name}' does not exist")
             return
 
-        # 按需加载模型
+        # Load model on demand
         model = self.load_model_on_demand(model_name)
         if model is None:
             print(f"Error: Failed to load model '{model_name}'")
@@ -841,11 +851,11 @@ class GeoModeler:
 
         self.current_model = model
 
-        # 创建主容器
+        # Create main container
         main_container = widgets.VBox()
         widgets_list = []
 
-        # 添加模型基本信息
+        # Add model basic info
         model_info = widgets.HTML(value=f"""
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
                 <h3 style="margin-top: 0;">{self.current_model.name}</h3>
@@ -864,7 +874,7 @@ class GeoModeler:
         """)
         widgets_list.append(model_info)
 
-        # 隐藏的触发按钮（纯widgets，用于可靠触发Python回调）
+        # Hidden trigger button (pure widgets, for reliable Python callback triggering)
         hidden_trigger_btn = widgets.Button(
             description='',
             layout=widgets.Layout(width='0px', height='0px',
@@ -872,20 +882,20 @@ class GeoModeler:
             style=widgets.ButtonStyle(button_color='#ffffff')
         )
         hidden_trigger_btn._dom_classes = ['qa-hidden-trigger']
-        # 放入极小的容器，避免影响布局
+        # Put in minimal container to avoid affecting layout
         widgets_list.append(widgets.Box(
             [hidden_trigger_btn], layout=widgets.Layout(width='0px', height='0px')))
-        # 保存引用，稍后绑定回调
+        # Save reference for later callback binding
         self.widgets['qa_hidden_btn'] = hidden_trigger_btn
 
-        # 遍历状态
+        # Iterate through states
         for i, state in enumerate(self.current_model.states):
             state_container = widgets.VBox(
                 layout=widgets.Layout(margin='0 0 8px 0')
             )
             state_widgets = []
 
-            # 添加状态信息
+            # Add state info
             state_info = widgets.HTML(value=f"""
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
                     <h3 style="color: #1e293b; margin: 0 0 4px 0; font-size: 16px; font-weight: 600;">{state.get('name', '')}</h3>
@@ -894,7 +904,7 @@ class GeoModeler:
             """)
             state_widgets.append(state_info)
 
-            # 检查该状态是否有需要用户输入的事件
+            # Check if this state has events requiring user input
             has_input_events = False
             for event in state.get('event', []):
                 if event.get('eventType') == 'response':
@@ -908,7 +918,7 @@ class GeoModeler:
                         'optional', False) else "Optional"
                     event_desc = event.get('eventDesc', '')
 
-                    # 添加事件标题和描述
+                    # Add event title and description
                     event_header = widgets.HTML(value=f"""
                         <div style="margin: 2px 0;">
                             <span style="font-weight: 500;">{event_name}</span>
@@ -925,7 +935,7 @@ class GeoModeler:
                     """)
                     event_widgets.append(event_header)
 
-                    # 检查是否含nodes数据
+                    # Check if contains nodes data
                     has_nodes = False
                     nodes_data = []
                     for data_item in event.get('data', []):
@@ -934,11 +944,11 @@ class GeoModeler:
                             nodes_data = data_item['nodes']
 
                     if has_nodes:
-                        # 创建表格容器
+                        # Create table container
                         table_container = widgets.VBox()
                         table_widgets = []
 
-                        # 添加表头
+                        # Add table header
                         header = widgets.HTML(value="""
                             <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
                                 <div style="font-weight: 500;">Parameter Name</div>
@@ -948,9 +958,9 @@ class GeoModeler:
                         """)
                         table_widgets.append(header)
 
-                        # 个参数创建一行
+                        # Create a row for each parameter
                         for node in nodes_data:
-                            # 创建行容器
+                            # Create row container
                             row = widgets.HBox([
                                 widgets.HTML(value=f"""
                                     <div style="padding: 8px; min-width: 150px;">{node.get('text', '')}</div>
@@ -963,14 +973,14 @@ class GeoModeler:
                                     layout=widgets.Layout(width='150px')
                                 )
                             ])
-                            # 存储Text widget的引用
+                            # Store Text widget reference
                             self.widgets[f'node-{event_name}-{node.get("text")}'] = row.children[-1]
                             table_widgets.append(row)
 
                         table_container.children = table_widgets
                         event_widgets.append(table_container)
                     else:
-                        # 创建文件选择器
+                        # Create file chooser
                         FileChooser = _lazy_import_filechooser()
                         fc = FileChooser(
                             path='./',
@@ -982,7 +992,7 @@ class GeoModeler:
                     event_container.children = event_widgets
                     state_widgets.append(event_container)
 
-            # 如果没有输入事件，添加提示信息
+            # If no input events, add prompt info
             if not has_input_events:
                 no_input_msg = widgets.HTML(value="""
                     <div style="padding: 8px 12px; 
@@ -1008,12 +1018,12 @@ class GeoModeler:
                 """)
                 widgets_list.append(divider)
 
-        # 创建输出区域
+        # Create output area
         self.widgets['output_area'] = widgets.Output()
-        # 将输出区域添加到widgets_list
+        # Add output area to widgets_list
         widgets_list.append(self.widgets['output_area'])
 
-        # 创建按钮容器（水平布局，右对齐）
+        # Create button container (horizontal layout, right aligned)
         button_container = widgets.HBox(
             layout=widgets.Layout(
                 display='flex',
@@ -1022,25 +1032,25 @@ class GeoModeler:
             )
         )
 
-        # 创建Run按钮（运行期间禁用）
+        # Create Run button (disabled during execution)
         run_button = widgets.Button(
             description='Run',
             style=widgets.ButtonStyle(
                 button_color='#4CAF50', text_color='white')
         )
 
-        # 运行中动画（放在按钮右侧，默认隐藏）
+        # Running animation (placed to the right of button, hidden by default)
         spinner_widget = widgets.HTML(
             value='', layout=widgets.Layout(margin='0 6px'))
         self.widgets['running_spinner'] = spinner_widget
 
         def on_run_click(b):
-            # 禁用按钮，按钮文案与图标切换为运行中
+            # Disable button, switch text and icon to running state
             run_button.disabled = True
             original_desc = run_button.description
             original_icon = getattr(run_button, 'icon', '')
             run_button.description = 'Model calculating...'
-            # 在按钮内使用 fontawesome spinner 图标并注入旋转CSS
+            # Use fontawesome spinner icon in button and inject rotation CSS
             try:
                 run_button.icon = 'spinner'
                 display, HTML, _ = _lazy_import_ipython_display()
@@ -1050,7 +1060,7 @@ class GeoModeler:
                     self._spinner_css_injected = True
             except Exception:
                 pass
-            # 静默运行，屏蔽底层print日志
+            # Silent run, suppress underlying print logs
             import contextlib
             import io
             _buf_out, _buf_err = io.StringIO(), io.StringIO()
@@ -1058,7 +1068,7 @@ class GeoModeler:
                 with contextlib.redirect_stdout(_buf_out), contextlib.redirect_stderr(_buf_err):
                     self._on_run_button_clicked(b)
             finally:
-                # 恢复按钮状态
+                # Restore button state
                 run_button.disabled = False
                 run_button.description = original_desc
                 try:
@@ -1069,38 +1079,38 @@ class GeoModeler:
 
         run_button.on_click(on_run_click)
 
-        # 将按钮添加到按钮容器（移除Close按钮）
+        # Add button to button container (removed Close button)
         button_container.children = [run_button, spinner_widget]
 
-        # 将按钮容器添加到widgets_list
+        # Add button container to widgets_list
         widgets_list.append(button_container)
 
-        # 设置主容器的子组件
+        # Set main container children
         main_container.children = widgets_list
 
-        # 更新右侧面板的内容
+        # Update right panel content
         self.widgets['model_detail_area'].children = [main_container]
 
     def invoke_model(self, model_name):
-        """调用指定模型的交互界面"""
+        """Invoke the interactive interface for specified model."""
         if model_name not in self.model_names:
             raise ValueError(f"Model '{model_name}' does not exist")
 
-        # 按需加载模型
+        # Load model on demand
         model = self.load_model_on_demand(model_name)
         if model is None:
             raise ValueError(f"Failed to load model '{model_name}'")
 
         self.current_model = model
 
-        # 导入widgets
+        # Import widgets
         widgets = _lazy_import_ipywidgets()
 
-        # 创建主容器
+        # Create main container
         main_container = widgets.VBox()
         widgets_list = []
 
-        # 使用HBox布局来放置模型信息和问号按钮
+        # Use HBox layout to place model info and question button
         model_info_hbox = widgets.HBox(
             layout=widgets.Layout(
                 background='#f8fafc',
@@ -1112,7 +1122,7 @@ class GeoModeler:
             )
         )
 
-        # 添加模型基本信息HTML
+        # Add model basic info HTML
         model_info = widgets.HTML(
             value=f"""
                 <div>
@@ -1133,7 +1143,7 @@ class GeoModeler:
             layout=widgets.Layout(flex='1')
         )
 
-        # 创建问号按钮 - 使用原有配色风格
+        # Create question button - use original color scheme
         qa_toggle_button = widgets.Button(
             description='?',
             tooltip='Toggle QA Assistant',
@@ -1149,18 +1159,18 @@ class GeoModeler:
             )
         )
 
-        # 将信息和按钮放入HBox
+        # Put info and button into HBox
         model_info_hbox.children = [model_info, qa_toggle_button]
         widgets_list.append(model_info_hbox)
 
-        # 遍历状态
+        # Iterate through states
         for i, state in enumerate(self.current_model.states):
             state_container = widgets.VBox(
                 layout=widgets.Layout(margin='0 0 8px 0')
             )
             state_widgets = []
 
-            # 添加状态信息
+            # Add state info
             state_info = widgets.HTML(value=f"""
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
                     <h3 style="color: #1e293b; margin: 0 0 4px 0; font-size: 16px; font-weight: 600;">{state.get('name', '')}</h3>
@@ -1169,7 +1179,7 @@ class GeoModeler:
             """)
             state_widgets.append(state_info)
 
-            # 检查该状态是否有需要用户输入的事件
+            # Check if this state has events requiring user input
             has_input_events = False
             for event in state.get('event', []):
                 if event.get('eventType') == 'response':
@@ -1183,7 +1193,7 @@ class GeoModeler:
                         'optional', False) else "Optional"
                     event_desc = event.get('eventDesc', '')
 
-                    # 添加事件标题和描述
+                    # Add event title and description
                     event_header = widgets.HTML(value=f"""
                         <div style="margin: 2px 0;">
                             <span style="font-weight: 500;">{event_name}</span>
@@ -1200,7 +1210,7 @@ class GeoModeler:
                     """)
                     event_widgets.append(event_header)
 
-                    # 检查是否包含nodes类数据
+                    # Check if contains nodes type data
                     has_nodes = False
                     nodes_data = []
                     for data_item in event.get('data', []):
@@ -1209,11 +1219,11 @@ class GeoModeler:
                             nodes_data = data_item['nodes']
 
                     if has_nodes:
-                        # 创建表格容器
+                        # Create table container
                         table_container = widgets.VBox()
                         table_widgets = []
 
-                        # 添加表头
+                        # Add table header
                         header = widgets.HTML(value="""
                             <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
                                 <div style="font-weight: 500;">Parameter Name</div>
@@ -1223,9 +1233,9 @@ class GeoModeler:
                         """)
                         table_widgets.append(header)
 
-                        # 为每个参数创建一行
+                        # Create a row for each parameter
                         for node in nodes_data:
-                            # 创建行容器
+                            # Create row container
                             row = widgets.HBox([
                                 widgets.HTML(value=f"""
                                     <div style="padding: 8px; min-width: 150px;">{node.get('text', '')}</div>
@@ -1238,14 +1248,14 @@ class GeoModeler:
                                     layout=widgets.Layout(width='150px')
                                 )
                             ])
-                            # 存储Text widget的引用
+                            # Store Text widget reference
                             self.widgets[f'node-{event_name}-{node.get("text")}'] = row.children[-1]
                             table_widgets.append(row)
 
                         table_container.children = table_widgets
                         event_widgets.append(table_container)
                     else:
-                        # 创建文件选择器
+                        # Create file chooser
                         FileChooser = _lazy_import_filechooser()
                         fc = FileChooser(
                             path='./',
@@ -1257,7 +1267,7 @@ class GeoModeler:
                     event_container.children = event_widgets
                     state_widgets.append(event_container)
 
-            # 如果没有输入事件，添加提示信息
+            # If no input events, add prompt info
             if not has_input_events:
                 no_input_msg = widgets.HTML(value="""
                     <div style="padding: 8px 12px; 
@@ -1283,12 +1293,12 @@ class GeoModeler:
                 """)
                 widgets_list.append(divider)
 
-        # 创建输出区域
+        # Create output area
         self.widgets['output_area'] = widgets.Output()
-        # 将输出区域添加到widgets_list
+        # Add output area to widgets_list
         widgets_list.append(self.widgets['output_area'])
 
-        # 创建按钮容器（水平布局）
+        # Create button container (horizontal layout)
         button_container = widgets.HBox(
             layout=widgets.Layout(
                 display='flex',
@@ -1297,25 +1307,25 @@ class GeoModeler:
             )
         )
 
-        # 创建Run按钮（运行期间禁用）
+        # Create Run button (disabled during execution)
         run_button = widgets.Button(
             description='Run',
             style=widgets.ButtonStyle(
                 button_color='#4CAF50', text_color='white')
         )
 
-        # 运行中动画（放在按钮右侧，默认隐藏）
+        # Running animation (placed to the right of button, hidden by default)
         spinner_widget = widgets.HTML(
             value='', layout=widgets.Layout(margin='0 6px'))
         self.widgets['running_spinner'] = spinner_widget
 
         def on_run_click(b):
-            # 禁用按钮，按钮文案与图标切换为运行中
+            # Disable button, switch text and icon to running state
             run_button.disabled = True
             original_desc = run_button.description
             original_icon = getattr(run_button, 'icon', '')
             run_button.description = 'Model calculating...'
-            # 在按钮内使用 fontawesome spinner 图标并注入旋转CSS
+            # Use fontawesome spinner icon in button and inject rotation CSS
             try:
                 run_button.icon = 'spinner'
                 display, HTML, _ = _lazy_import_ipython_display()
@@ -1325,7 +1335,7 @@ class GeoModeler:
                     self._spinner_css_injected = True
             except Exception:
                 pass
-            # 静默运行，屏蔽底层print日志
+            # Silent run, suppress underlying print logs
             import contextlib
             import io
             _buf_out, _buf_err = io.StringIO(), io.StringIO()
@@ -1333,7 +1343,7 @@ class GeoModeler:
                 with contextlib.redirect_stdout(_buf_out), contextlib.redirect_stderr(_buf_err):
                     self._on_run_button_clicked(b)
             finally:
-                # 恢复按钮状态
+                # Restore button state
                 run_button.disabled = False
                 run_button.description = original_desc
                 try:
@@ -1344,16 +1354,16 @@ class GeoModeler:
 
         run_button.on_click(on_run_click)
 
-        # 将按钮添加到按钮容器
+        # Add button to button container
         button_container.children = [run_button, spinner_widget]
 
-        # 将按钮容器添加到widgets_list
+        # Add button container to widgets_list
         widgets_list.append(button_container)
 
-        # 设置主容器的子组件
+        # Set main container children
         main_container.children = widgets_list
 
-        # 创建水平分栏容器
+        # Create horizontal split container
         split_container = widgets.HBox(
             layout=widgets.Layout(
                 width='100%',
@@ -1361,7 +1371,7 @@ class GeoModeler:
             )
         )
 
-        # 创建左侧容器 (65%)
+        # Create left container (65%)
         left_panel = widgets.VBox(
             layout=widgets.Layout(
                 width='60%',
@@ -1369,16 +1379,16 @@ class GeoModeler:
             )
         )
 
-        # 创建右侧容器 (35%)
+        # Create right container (35%)
         right_panel = widgets.VBox(
             layout=widgets.Layout(
                 width='40%',
-                padding='10px',  # 增加内边距
+                padding='10px',  # Increase padding
                 border_left='1px solid #ccc'
             )
         )
 
-        # 创建搜索框
+        # Create search box
         search_box = widgets.Text(
             placeholder='Please input your question about this model...',
             description='Search:',
@@ -1399,70 +1409,70 @@ class GeoModeler:
                 box_shadow='0 1px 2px rgba(0, 0, 0, 0.05)'
             )
         )
-        # 添加悬停和焦点效果
+        # Add hover and focus effects
         search_box._dom_classes = ['hover:border-indigo-500',
                                    'focus:ring-2', 'focus:ring-indigo-500', 'focus:border-indigo-500']
 
-        # 创建结果显示区域，添加固定高度和滚动条
+        # Create result display area with fixed height and scrollbar
         result_area = widgets.Output(
             layout=widgets.Layout(
                 width='100%',
-                height='500px',  # 固定高度
+                height='500px',  # Fixed height
                 # border='1px solid #ddd',
                 padding='5px',
-                overflow_y='auto'  # 添加垂直滚动条
+                overflow_y='auto'  # Add vertical scrollbar
             )
         )
 
-        # 保存到实例变量中
+        # Save to instance variables
         self.widgets['result_area'] = result_area
 
-        # 绑定事件处理函数
+        # Bind event handler
         search_box.on_submit(self.on_search_submit)
 
-        # 创建标题
+        # Create title
         title = widgets.HTML(
             value='<h3 style="margin:0 0 2px 0;">Model QA Assistant</h3>'
         )
 
-        # 组装右侧面板 - 修改这部分代码
+        # Assemble right panel
         right_panel.children = [
             title,
             search_box,
             result_area
         ]
 
-        # 将原有的main_container放入左侧面板
+        # Put original main_container into left panel
         left_panel.children = [main_container]
 
-        # 组装分栏容器
+        # Assemble split container
         split_container.children = [left_panel, right_panel]
 
-        # 定义切换QA Panel的函数
-        qa_panel_visible = [True]  # 初始状态为显示
+        # Define toggle QA Panel function
+        qa_panel_visible = [True]  # Initial state is visible
 
         def toggle_qa_panel(button=None):
             if qa_panel_visible[0]:
-                # 隐藏QA Panel
+                # Hide QA Panel
                 split_container.children = [left_panel]
                 left_panel.layout.width = '100%'
                 qa_panel_visible[0] = False
-                # print("QA Panel hidden")  # 调试信息
+                # print("QA Panel hidden")  # Debug info
             else:
-                # 显示QA Panel
+                # Show QA Panel
                 split_container.children = [left_panel, right_panel]
                 left_panel.layout.width = '60%'
                 qa_panel_visible[0] = True
-                # print("QA Panel shown")  # 调试信息
+                # print("QA Panel shown")  # Debug info
 
-        # 直接绑定问号按钮的点击事件
+        # Directly bind question button click event
         qa_toggle_button.on_click(toggle_qa_panel)
 
-        # 添加CSS样式来美化按钮
+        # Add CSS styles to beautify button
         display, HTML, _ = _lazy_import_ipython_display()
         button_css = HTML("""
             <style>
-                /* 美化问号按钮 - 使用原有配色风格 */
+                /* Beautify question button - use original color scheme */
                 .widget-hbox .widget-button .btn {
                     border-radius: 50% !important;
                     border: 1px solid #e2e8f0 !important;
@@ -1489,22 +1499,22 @@ class GeoModeler:
         return split_container
 
     def show_model(self, model_name):
-        """显示指定模型的交互界面（invoke_model的别名，保持向后兼容）"""
+        """Display interactive interface for specified model (alias for invoke_model, for backward compatibility)."""
         return self.invoke_model(model_name)
 
     def _on_run_button_clicked(self, b):
-        """处理运行按钮点击事件"""
-        # 导入requests模块
+        """Handle run button click event."""
+        # Import requests module
         requests = _lazy_import_requests()
 
-        # 检查是否为静默模式
+        # Check if in silent mode
         silent_mode = getattr(self, '_silent_mode', False)
 
-        # 定义输出上下文
+        # Define output context
         if not silent_mode:
             output_context = self.widgets['output_area']
         else:
-            # 静默模式下使用空的上下文管理器
+            # Use empty context manager in silent mode
             import contextlib
             output_context = contextlib.nullcontext()
 
@@ -1524,7 +1534,7 @@ class GeoModeler:
                         event_name = event.get('eventName', '')
                         is_required = not event.get('optional', False)
 
-                        # 检查是否有nodes数据
+                        # Check if has nodes data
                         has_nodes = False
                         nodes_data = []
                         for data_item in event.get('data', []):
@@ -1533,7 +1543,7 @@ class GeoModeler:
                                 nodes_data = data_item['nodes']
 
                         if has_nodes:
-                            # 直接收集节点参数值，不转XML
+                            # Directly collect node parameter values, no XML conversion
                             for node in nodes_data:
                                 widget = self.widgets.get(
                                     f'node-{event_name}-{node.get("text")}')
@@ -1544,7 +1554,7 @@ class GeoModeler:
                                             'kernelType', 'string')
                                         node_name = node.get("text")
 
-                                        # 根据kernelType转换数据类型
+                                        # Convert data type based on kernelType
                                         try:
                                             if kernel_type == 'int':
                                                 converted_value = int(value)
@@ -1556,7 +1566,7 @@ class GeoModeler:
                                             else:  # string or default
                                                 converted_value = str(value)
 
-                                            # 直接存储到input_files中
+                                            # Store directly to input_files
                                             input_files[state_name][node_name] = converted_value
 
                                         except (ValueError, TypeError) as e:
@@ -1570,7 +1580,7 @@ class GeoModeler:
                                     missing_required_fields.append(
                                         f"'{node.get('text')}'")
                         else:
-                            # 处理文件输入
+                            # Handle file input
                             file_chooser = self.widgets.get(
                                 f'file_chooser_{event_name}')
                             if file_chooser:
@@ -1585,26 +1595,43 @@ class GeoModeler:
                     f"❌ Error: The following required fields are missing: {', '.join(missing_required_fields)}")
                 return
 
+            # Display progress indicator
+            display, HTML, _ = _lazy_import_ipython_display()
+            progress_display = None
+            if not silent_mode:
+                progress_html = """
+                <div id="model-progress" style="padding:15px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:10px 0;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="spinner" style="width:20px;height:20px;border:3px solid #e0e0e0;border-top:3px solid #3b82f6;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                        <span style="color:#0369a1;font-weight:500;">🚀 Model is running... This may take a few minutes.</span>
+                    </div>
+                    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+                </div>
+                """
+                progress_display = display(HTML(progress_html), display_id='model_progress')
+
             try:
-                # 只在非静默模式下打印调试信息
+                # Only print debug info in non-silent mode
                 if not silent_mode:
-                    print(input_files)
-                # 继续执行模型
-                # 导入openModel模块
+                    print("📋 Input parameters:", input_files)
+
+                # Continue executing model
+                # Import openModel module
                 openModel = _lazy_import_openmodel()
                 taskServer = openModel.OGMSAccess(
                     modelName=self.current_model.name,
                     token="6U3O1Sy5696I5ryJFaYCYVjcIV7rhd1MKK0QGX9A7zafogi8xTdvejl6ISUP1lEs"
                 )
-                # 静默运行，不打印控制台日志
-                import contextlib
-                import io
-                _b1, _b2 = io.StringIO(), io.StringIO()
-                with contextlib.redirect_stdout(_b1), contextlib.redirect_stderr(_b2):
-                    result = taskServer.createTask(params=input_files)
+
+                # Execute model (no longer silent, let user see progress)
+                result = taskServer.createTask(params=input_files)
+
+                # Update progress indicator to success state
+                if not silent_mode and progress_display:
+                    progress_display.update(HTML('<div style="color:#16a34a;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">✅ Model execution completed!</div>'))
                 # print(result)
 
-                # 在UI中展示结果的下载链接（不自动下载到本地）
+                # Display download links in UI (no auto download to local)
                 if not silent_mode:
                     display, HTML, _ = _lazy_import_ipython_display()
                     rows = []
@@ -1626,7 +1653,7 @@ class GeoModeler:
                                 </tr>
                             """)
 
-                    # 预生成表格行HTML，避免在f-string表达式中包含反斜杠
+                    # Pre-generate table row HTML to avoid backslash in f-string
                     rows_html = ''.join(
                         rows) if rows else '<tr><td colspan="4" style="padding:8px;color:#64748b;">No outputs</td></tr>'
 
@@ -1651,36 +1678,57 @@ class GeoModeler:
                     display(HTML(table_html))
 
             except Exception as e:
+                import traceback
+                error_traceback = traceback.format_exc()
+
+                # Update progress indicator to error state
+                if not silent_mode and progress_display:
+                    # Escape HTML special characters
+                    safe_traceback = error_traceback.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('\n', '<br>')
+                    error_html = f'''
+                    <div style="color:#dc2626;padding:15px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                        <div style="font-weight:600;margin-bottom:10px;">❌ Model run failed: {str(e)}</div>
+                        <details style="margin-top:10px;">
+                            <summary style="cursor:pointer;color:#991b1b;font-weight:500;">Show error details</summary>
+                            <pre style="background:#fee2e2;padding:10px;border-radius:4px;margin-top:8px;font-size:12px;overflow-x:auto;white-space:pre-wrap;">{safe_traceback}</pre>
+                        </details>
+                    </div>
+                    '''
+                    progress_display.update(HTML(error_html))
+
+                # Print full error info to console
                 print(f"❌ Error: Model run failed - {str(e)}")
+                print("Error traceback:")
+                print(error_traceback)
 
     def _upload_to_server(self, xml_content, event_name):
-        """上传XML据到中转服务器并获取下载链接"""
-        # 导入requests模块
+        """Upload XML data to transfer server and get download link."""
+        # Import requests module
         requests = _lazy_import_requests()
         from io import StringIO
 
         try:
-            # 务器地址
+            # Server address
             upload_url = 'http://221.224.35.86:38083/data'
 
-            # 使用event_name作为文件名
+            # Use event_name as filename
             filename = f"{event_name}"
 
-            # 创建表单数据
+            # Create form data
             files = {
                 'datafile': (filename, StringIO(xml_content), 'application/xml')
             }
             data = {
-                'name': filename  # 使用相同的文件名
+                'name': filename  # Use same filename
             }
 
-            # 发送POST请求
+            # Send POST request
             response = requests.post(upload_url, files=files, data=data)
 
-            # 检查响应状态
+            # Check response status
             if response.status_code == 200:
                 response_data = response.json()
-                # 构造下载链接
+                # Construct download link
                 download_url = f"{upload_url}/{response_data['data']['id']}"
                 return download_url
             else:
@@ -1692,58 +1740,59 @@ class GeoModeler:
 
     async def _rewrite_user_query(self, original_query: str) -> str:
         """
-        使用LLM对用户查询进行改写，基于当前模型上下文和用户建模历史
+        Use LLM to rewrite user query based on current model context and user modeling history.
         """
-        # 导入IPython模块
+        # Import IPython module
         get_ipython = _lazy_import_ipython()
 
-        # 导入OpenAI模块
+        # Import OpenAI module
         OpenAI = _lazy_import_openai()
 
-        # 只收集模型名称和描述
+        # Only collect model name and description
         model_info = {
             "name": self.current_model.name,
             "description": self.current_model.description
         }
 
-        # 获取Jupyter历史上下文
+        # Get Jupyter history context
         ip = get_ipython()
         history_context = ""
         if ip is not None:
             history = []
             for session, line_num, input in ip.history_manager.get_range():
                 history.append(input)
-            history_context = "\n".join(history[-10:])  # 只取最近10条指令
+            history_context = "\n".join(history[-10:])  # Only take last 10 commands
 
-        # 构建上下文增强提示
+        # Build context-enhanced prompt
         prompt = f"""
-你是一个专业的地理建模系统助手，你的任务是理解用户对模型的问题并进行智能改写，使其更加明确和全面，以便更好地回答用户真正的需求。
+You are a professional geographic modeling system assistant. Your task is to understand user questions about the model and intelligently rewrite them to be more specific and comprehensive, in order to better address the user's actual needs.
 
-### 当前上下文:
-1. 用户正在使用名为"{model_info['name']}"的地理模型
-2. 模型描述: {model_info['description']}
-3. 用户最近的Jupyter代码历史: 
+### Current Context:
+1. User is working with a geographic model named "{model_info['name']}"
+2. Model description: {model_info['description']}
+3. User's recent Jupyter code history:
 ```
 {history_context}
 ```
 
-### 原始用户查询:
+### Original User Query:
 "{original_query}"
 
-### 你的任务:
-1. 分析用户原始查询，考虑查询是否具体明确
-2. 如果用户查询过于宽泛或模糊，请根据上下文将其具体化和明确化
-3. 如果用户查询是关于模型参数，请确保改写后的查询包括该参数的具体角色、作用、推荐值范围等内容
-4. 如果用户查询是关于模型整体的，请考虑将查询扩展到包含模型的理论基础、应用场景、实际案例等
-5. 如果用户查询是关于模型与其他模型比较的，请明确比较的具体方面(如精度、速度、适用场景等)
+### Your Task:
+1. Analyze the original user query and consider whether it is specific and clear
+2. If the user query is too broad or vague, make it more specific and clear based on the context
+3. If the user query is about model parameters, ensure the rewritten query includes the parameter's specific role, function, and recommended value ranges
+4. If the user query is about the model as a whole, consider expanding the query to include theoretical foundations, application scenarios, and practical examples
+5. If the user query is about comparing this model with others, specify the aspects of comparison (such as accuracy, speed, applicable scenarios, etc.)
 
-### 输出格式:
-只输出改写后的查询，不要包含任何解释或前缀，直接返回改写后的查询文本。如果原始查询已经足够明确和全面，可以保持不变或进行微调。改写后的问题要短小精炼，不要冗余。问题要限制在200个英文字符以内。
+### Output Format:
+Only output the rewritten query without any explanations or prefixes. Return the rewritten query text directly. If the original query is already sufficiently clear and comprehensive, keep it unchanged or make minor adjustments. The rewritten question should be concise and not redundant. Limit the question to within 200 English characters.
 """
 
-        # 调用OpenAI API进行查询改写
-        client = OpenAI(api_key="sk-4bp5a1DcdLSHCiw1401270055f47424b9eA58cAd587266A3",
-                        base_url="https://aihubmix.com/v1")
+        # Call OpenAI API for query rewriting
+        cfg = _lazy_import_config()
+        openai_api_key, openai_base_url = cfg.get_openai_config()
+        client = OpenAI(api_key=openai_api_key, base_url=openai_base_url)
         try:
             response = client.chat.completions.create(
                 model="gpt-4.1-nano",
@@ -1751,26 +1800,26 @@ class GeoModeler:
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": original_query}
                 ],
-                temperature=0.3,  # 使用较低温度以获得更确定性的输出
+                temperature=0.3,  # Use lower temperature for more deterministic output
                 max_tokens=15000
             )
             rewritten_query = response.choices[0].message.content.strip()
             return rewritten_query
         except Exception as e:
-            print(f"查询改写出错: {str(e)}")
-            return original_query  # 如果出错，返回原始查询
+            print(f"Query rewriting error: {str(e)}")
+            return original_query  # Return original query if error
 
     async def _get_search_result(self, query: str) -> str:
         """
-        调用学术查询服务和自建知识库获取结果
+        Call academic query service and local knowledge base to get results.
         """
-        # 导入IPython模块
+        # Import IPython module
         get_ipython = _lazy_import_ipython()
 
-        # 首先进行查询改写
+        # First perform query rewriting
         rewritten_query = await self._rewrite_user_query(query)
 
-        # 获取历史上下文
+        # Get history context
         ip = get_ipython()
         history_context = ""
         if ip is not None:
@@ -1779,52 +1828,52 @@ class GeoModeler:
                 history.append(input)
             history_context = "\n".join(history)
 
-        # 构建建模上下文
+        # Build modeling context
         modeling_context = f"""
-                            当前模型: {self.current_model.name}
-                            模型描述: {self.current_model.description}
-                            历史记录:
+                            Current model: {self.current_model.name}
+                            Model description: {self.current_model.description}
+                            History:
                             {history_context}
                             """
 
         try:
-            # 并行查询两个数据源
+            # Query two data sources in parallel
             tasks = []
 
-            # 任务1: 查询学术论文API
+            # Task 1: Query academic paper API
             academic_task = asyncio.create_task(
                 self._query_academic_api(rewritten_query))
             tasks.append(academic_task)
 
-            # 任务2: 查询本地知识库
-            # 直接查询本地模型数据，不需要外部ID
+            # Task 2: Query local knowledge base
+            # Query local model data directly, no external ID needed
             kb_task = asyncio.create_task(
                 self._query_knowledge_base(rewritten_query))
             tasks.append(kb_task)
 
-            # 等待所有查询完成
+            # Wait for all queries to complete
             results = await asyncio.gather(*tasks)
 
-            # 收集结果
+            # Collect results
             academic_result = results[0] if results else {}
             kb_records = results[1] if len(results) > 1 else []
 
-            # 如果自建知识库有结果，合并到最终结果中
+            # If local knowledge base has results, merge into final results
             if kb_records:
-                # 处理知识库结果
+                # Process knowledge base results
                 kb_contents = []
                 for record in kb_records:
                     segment = record.get("segment", {})
                     kb_contents.append(segment.get("content", ""))
 
-                # 使用OpenAI合成最终回答
+                # Use OpenAI to synthesize final answer
                 final_answer = await self._synthesize_final_answer(
                     academic_result.get("answer", ""),
                     kb_contents,
                     rewritten_query
                 )
 
-                # 构建包含自建知识库的新结果
+                # Build new result containing local knowledge base
                 enhanced_result = {
                     "question": academic_result.get("question", rewritten_query),
                     "answer": final_answer,
@@ -1834,18 +1883,18 @@ class GeoModeler:
 
                 return enhanced_result
             else:
-                # 如果没有知识库结果，直接返回学术结果
+                # If no knowledge base results, return academic results directly
                 return academic_result
 
         except Exception as e:
-            print(f"获取搜索结果时出错: {str(e)}")
-            return {"answer": "网络异常请稍后重试", "paperList": []}
+            print(f"Error getting search results: {str(e)}")
+            return {"answer": "Network error, please try again later", "paperList": []}
 
     async def _query_academic_api(self, query: str) -> dict:
         """
-        查询学术API获取论文和答案
+        Query academic API to get papers and answers.
         """
-        # 导入学术查询服务
+        # Import academic query service
         AcademicQueryService = _lazy_import_academic_service()
 
         try:
@@ -1854,46 +1903,46 @@ class GeoModeler:
             result = await service.get_academic_question_answer(full_query)
             return result
         except Exception as e:
-            print(f"查询学术API时出错: {str(e)}")
-            return {"answer": "学术查询服务暂时不可用", "paperList": []}
+            print(f"Error querying academic API: {str(e)}")
+            return {"answer": "Academic query service temporarily unavailable", "paperList": []}
 
     async def _synthesize_final_answer(self, academic_answer: str, kb_contents: list, query: str) -> str:
         """
-        使用OpenAI合成最终答案，整合学术答案和知识库内容
+        Use OpenAI to synthesize final answer, integrating academic answers and knowledge base content.
         """
-        # 导入OpenAI模块
+        # Import OpenAI module
         OpenAI = _lazy_import_openai()
 
         try:
-            # 准备知识库内容
+            # Prepare knowledge base content
             kb_content_text = "\n---\n".join(kb_contents)
 
-            # 构建提示
+            # Build prompt
             prompt = f"""
-作为地理建模领域的专家助手，你的任务是基于以下两个来源的信息，为用户提供最全面、最准确的回答:
+As an expert assistant in the field of geographic modeling, your task is to provide the most comprehensive and accurate answer to the user based on the following two sources of information:
 
-1. 来自学术论文的答案:
+1. Answer from academic papers:
 {academic_answer}
 
-2. 来自模型知识库的内容:
+2. Content from model knowledge base:
 {kb_content_text}
 
-用户的问题是: "{query}"
+The user's question is: "{query}"
 
-请综合分析这两个来源的信息，给出一个完整的回答，满足以下要求:
-1. 合并这两个来源的关键信息，避免重复
-2. 如果学术来源和知识库来源有冲突，请说明这种差异
-3. 优先引用知识库的具体参数值、配置建议和使用方法
-4. 以清晰的结构组织回答，必要时使用小标题和列表
-5. 如果知识库内容包含具体的模型参数或配置指南，请着重强调这些实用信息
+Please analyze the information from these two sources and provide a complete answer that meets the following requirements:
+1. Merge key information from both sources while avoiding repetition
+2. If there are conflicts between academic sources and knowledge base sources, explain these differences
+3. Prioritize citing specific parameter values, configuration suggestions, and usage methods from the knowledge base
+4. Organize the answer with a clear structure, using subheadings and lists where necessary
+5. If the knowledge base content contains specific model parameters or configuration guidelines, emphasize this practical information
 
-你的回答应当既满足科学严谨性，又具有实操指导价值。请直接给出回答，不需要解释或总结你的分析过程。 
-Please output in English.
+Your answer should satisfy both scientific rigor and practical guidance value. Please provide your answer directly without explaining or summarizing your analysis process.
 """
 
-            # 调用OpenAI API
-            client = OpenAI(api_key="sk-4bp5a1DcdLSHCiw1401270055f47424b9eA58cAd587266A3",
-                            base_url="https://aihubmix.com/v1")
+            # Call OpenAI API
+            cfg = _lazy_import_config()
+            openai_api_key, openai_base_url = cfg.get_openai_config()
+            client = OpenAI(api_key=openai_api_key, base_url=openai_base_url)
             response = client.chat.completions.create(
                 model="gpt-4.1-nano",
                 messages=[
@@ -1906,41 +1955,41 @@ Please output in English.
             return response.choices[0].message.content.strip()
 
         except Exception as e:
-            print(f"合成最终答案时出错: {str(e)}")
-            return f"{academic_answer}\n\n[注: 知识库内容集成失败]"
+            print(f"Error synthesizing final answer: {str(e)}")
+            return f"{academic_answer}\n\n[Note: Knowledge base integration failed]"
 
     async def _get_knowledge_base_model_id(self, model_name: str) -> str:
         """
-        查询MongoDB获取模型ID
+        Query MongoDB to get model ID.
         """
         try:
-            # 模型ID映射表 - 实际应用中可以从MongoDB查询
-            # 以下是示例映射，实际使用时应替换为真实的数据库查询
+            # Model ID mapping - in production, query from MongoDB
+            # Below is sample mapping, replace with actual database query in production
             model_id_mapping = {
                 "SWAT_Model": "67eaa67e713cad3b0e31b438",
-                # 其他模型映射...
+                # Other model mappings...
             }
 
-            # 查找当前模型ID
+            # Find current model ID
             model_id = model_id_mapping.get(model_name)
             if not model_id:
-                print(f"警告: 未找到模型 '{model_name}' 的知识库ID")
+                print(f"Warning: Knowledge base ID not found for model '{model_name}'")
                 return None
 
             return model_id
         except Exception as e:
-            print(f"获取模型知识库ID时出错: {str(e)}")
+            print(f"Error getting model knowledge base ID: {str(e)}")
             return None
 
     async def _query_knowledge_base(self, query: str, top_k: int = 3) -> list:
         """
-        查询本地模型知识库（基于computeModel.json）
+        Query local model knowledge base (based on computeModel.json).
         """
         try:
             import json
             import os
 
-            # 加载本地模型数据
+            # Load local model data
             model_data_path = os.path.join(os.path.dirname(
                 __file__), 'data', 'computeModel.json')
 
@@ -1950,49 +1999,49 @@ Please output in English.
             with open(model_data_path, 'r', encoding='utf-8') as f:
                 all_models = json.load(f)
 
-            # 获取当前模型信息
+            # Get current model info
             current_model_name = self.current_model.name
             if current_model_name not in all_models:
                 return []
 
             model_info = all_models[current_model_name]
 
-            # 构建知识库内容
+            # Build knowledge base content
             kb_contents = []
 
-            # 1. 模型描述
+            # 1. Model description
             if 'description' in model_info:
                 kb_contents.append({
                     "type": "model_description",
-                    "content": f"模型描述: {model_info['description']}",
+                    "content": f"Model description: {model_info['description']}",
                     "relevance": 0.9
                 })
 
-            # 2. 模型标签
+            # 2. Model tags
             if 'normalTags' in model_info:
                 tags = model_info['normalTags']
                 kb_contents.append({
                     "type": "model_tags",
-                    "content": f"应用领域: {', '.join(tags)}",
+                    "content": f"Application domain: {', '.join(tags)}",
                     "relevance": 0.7
                 })
 
-            # 3. 参数信息
+            # 3. Parameter information
             if 'mdlJson' in model_info and 'mdl' in model_info['mdlJson']:
                 mdl = model_info['mdlJson']['mdl']
 
-                # 提取事件和参数信息
+                # Extract events and parameter information
                 if 'events' in mdl:
                     for event in mdl['events']:
                         event_desc = event.get('eventDesc', '')
                         if event_desc and any(keyword in event_desc.lower() for keyword in query.lower().split()):
                             kb_contents.append({
                                 "type": "event_description",
-                                "content": f"操作步骤: {event_desc}",
+                                "content": f"Operation step: {event_desc}",
                                 "relevance": 0.8
                             })
 
-                        # 提取参数信息
+                        # Extract parameter information
                         if 'data' in event:
                             for param in event['data']:
                                 param_text = param.get('text', '')
@@ -2002,14 +2051,14 @@ Please output in English.
                                 if param_text and any(keyword in param_text.lower() for keyword in query.lower().split()):
                                     kb_contents.append({
                                         "type": "parameter_info",
-                                        "content": f"参数 '{param_text}': {param_desc} (类型: {param_type})",
+                                        "content": f"Parameter '{param_text}': {param_desc} (type: {param_type})",
                                         "relevance": 0.9
                                     })
 
-            # 4. 按相关性排序并返回前top_k个结果
+            # 4. Sort by relevance and return top_k results
             kb_contents.sort(key=lambda x: x['relevance'], reverse=True)
 
-            # 转换为与原来格式兼容的结构
+            # Convert to format compatible with original structure
             formatted_results = []
             for item in kb_contents[:top_k]:
                 formatted_results.append({
@@ -2026,15 +2075,15 @@ Please output in English.
             return []
 
     def on_search_submit(self, widget):
-        """处理搜索提交"""
-        # 导入IPython display模块
+        """Handle search submission"""
+        # Import IPython display module
         _lazy_import_ipython_display()
 
         query = widget.value.strip()
         with self.widgets['result_area']:
             self.widgets['result_area'].clear_output()
             if query:
-                # 显示加载动画
+                # Display loading animation
                 loading_html = """
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0;">
                     <div class="loading-spinner"></div>
@@ -2056,21 +2105,21 @@ Please output in English.
                 """
                 display(HTML(loading_html))
 
-                # 获取当前运行的事件循环
+                # Get current running event loop
                 loop = asyncio.get_event_loop()
                 try:
-                    # 清除之前的输出，包括加载动画
+                    # Clear previous output, including loading animation
                     self.widgets['result_area'].clear_output(wait=True)
 
-                    # 执行查询
+                    # Execute query
                     result = loop.run_until_complete(
                         self._get_search_result(query))
                     if isinstance(result, dict):
-                        # 将答案转换为markdown格式
+                        # Convert answer to markdown format
                         markdown_func, _ = _lazy_import_markdown()
                         answer_html = markdown_func(
                             result['answer'], extensions=['extra'])
-                        # 包装在div中显示
+                        # Wrap in div for display
                         answer_wrapper = f"""
                         <style>
                             .answer-box {{
@@ -2129,12 +2178,12 @@ Please output in English.
                         """
                         display(HTML(answer_wrapper))
 
-                        # 创建选项卡的HTML内容
+                        # Create tab HTML content
                         has_kb = 'knowledgeBase' in result and result['knowledgeBase']
                         has_papers = 'paperList' in result and result['paperList']
 
                         if has_papers:
-                            # 只显示Related Resources选项卡
+                            # Only show Related Resources tab
                             tab_buttons = []
                             active_tab = "papers"
 
@@ -2142,7 +2191,7 @@ Please output in English.
                             tab_buttons.append(
                                 f"""<button class="tab-button {papers_active}" onclick="switchTab(event, 'papers-content')">Related Resources ({len(result['paperList'])})</button>""")
 
-                            # 构建论文内容
+                            # Build paper content
                             papers_content = ""
                             if has_papers:
                                 papers_display = "block"
@@ -2176,7 +2225,7 @@ Please output in English.
 
                                 papers_content = f"""<div id="papers-content" class="tab-content" style="display: {papers_display};">{''.join(paper_items)}</div>"""
 
-                            # 组合选项卡
+                            # Combine tabs
                             tab_style = """
                             <style>
                             .tab-container {
@@ -2222,19 +2271,19 @@ Please output in English.
                             function switchTab(evt, tabName) {
                                 var i, tabContent, tabButtons;
                                 
-                                // 隐藏所有标签内容
+                                // Hide all tab content
                                 tabContent = document.getElementsByClassName("tab-content");
                                 for (i = 0; i < tabContent.length; i++) {
                                     tabContent[i].style.display = "none";
                                 }
                                 
-                                // 移除所有按钮的活动状态
+                                // Remove active state from all buttons
                                 tabButtons = document.getElementsByClassName("tab-button");
                                 for (i = 0; i < tabButtons.length; i++) {
                                     tabButtons[i].className = tabButtons[i].className.replace(" active", "");
                                 }
                                 
-                                // 显示当前标签并添加活动状态
+                                // Show current tab and add active state
                                 document.getElementById(tabName).style.display = "block";
                                 evt.currentTarget.className += " active";
                             }
@@ -2256,11 +2305,11 @@ Please output in English.
                     else:
                         print(result)
                 except Exception as e:
-                    print(f"发生错误: {str(e)}")
+                    print(f"Error occurred: {str(e)}")
 
 
 class NotebookContext:
-    """用于收集和处理Notebook上下文信息"""
+    """Collects and processes Notebook context information"""
 
     def __init__(self):
         self.data_context = self._get_data_context()
@@ -2268,7 +2317,7 @@ class NotebookContext:
         self.history_context = self._get_modeling_history_context()
 
     def to_dict(self):
-        """将上下文信息转换为字典格式"""
+        """Convert context information to dictionary format"""
         return {
             "data_context": self.data_context,
             "model_context": self.model_context,
@@ -2276,19 +2325,19 @@ class NotebookContext:
         }
 
     def _get_data_context(self):
-        """获取数据仓库上下文信息"""
+        """Get data repository context information"""
         try:
-            # 获取IPython shell实例
+            # Get IPython shell instance
             get_ipython = _lazy_import_ipython()
             ipython = get_ipython()
             if ipython is None:
                 raise RuntimeError(
                     "This function must be run in an IPython environment")
 
-            # 获取当前工作录
+            # Get current working directory
             notebook_dir = os.getcwd()
 
-            # 定义要排除的目录和文件模式
+            # Define directories and file patterns to exclude
             exclude_dirs = {
                 '.git',
                 '__pycache__',
@@ -2298,7 +2347,7 @@ class NotebookContext:
                 '.vscode'
             }
 
-            # 定义要排除的扩展名
+            # Define extensions to exclude
             exclude_extensions = {
                 '.pyc',
                 '.pyo',
@@ -2313,26 +2362,26 @@ class NotebookContext:
                 '.txt'
             }
 
-            # 创建数据文件列表
+            # Create data file list
             data_files = []
 
-            # 遍历目录树
+            # Traverse directory tree
             for root, dirs, files in os.walk(notebook_dir):
-                # 过滤掉不需要的目录
+                # Filter out unwanted directories
                 dirs[:] = [d for d in dirs if d not in exclude_dirs]
 
-                # 过滤并处理文件
+                # Filter and process files
                 for file in files:
-                    # 检查文件扩展名
+                    # Check file extension
                     _, ext = os.path.splitext(file)
                     if ext not in exclude_extensions and not file.startswith('.'):
-                        # 获取相对路径
+                        # Get relative path
                         rel_path = os.path.relpath(
                             os.path.join(root, file), notebook_dir)
                         data_files.append(
                             f"- A {ext[1:]} file named '{file}' located at '{rel_path}'")
 
-            # 构建自然语描述
+            # Build natural language description
             if not data_files:
                 context_description = "No relevant data files found in the current directory."
             else:
@@ -2347,27 +2396,27 @@ class NotebookContext:
             return "Failed to analyze data context due to an error."
 
     def _get_model_context(self):
-        """获取模型仓库上下文信息"""
+        """Get model repository context information"""
         try:
-            # 获取当前文件所在目录
+            # Get directory of current file
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            # 构建JSON文件路径
+            # Build JSON file path
             json_path = os.path.join(current_dir, "data", "computeModel.json")
 
-            # 取模型配置文件
+            # Load model configuration file
             with open(json_path, encoding='utf-8') as f:
                 models_data = json.load(f)
 
-            # 如果没有模型数据，返回相应描述
+            # If no model data, return appropriate description
             if not models_data:
                 return "No models are currently available in the model repository."
 
-            # 构建模型描述表
+            # Build model description table
             model_descriptions = [
                 "The following models are available in the model repository:"]
 
             for model_name, model_data in models_data.items():
-                # 模型数据中提取信息
+                # Extract information from model data
                 mdl_json = model_data.get("mdlJson", {})
                 mdl = mdl_json.get("mdl", {})
 
@@ -2377,7 +2426,7 @@ class NotebookContext:
                 tags = model_data.get("normalTags", [])
                 states = mdl.get("states", [])
 
-                # 构建该模型的描述
+                # Build description for this model
                 model_desc = [f"\n- Model: {model_name}"]
                 model_desc.append(f"  Description: {description}")
                 model_desc.append(f"  Author: {author}")
@@ -2385,7 +2434,7 @@ class NotebookContext:
                 if tags:
                     model_desc.append(f"  Tags: {', '.join(tags)}")
 
-                # 收集所有输入输出事件
+                # Collect all input/output events
                 all_inputs = []
                 all_outputs = []
 
@@ -2396,7 +2445,7 @@ class NotebookContext:
                     all_outputs.extend(
                         [e for e in state_events if e.get("eventType") == "noresponse"])
 
-                # 描述输入需求
+                # Describe input requirements
                 if all_inputs:
                     model_desc.append("  Input Requirements:")
                     for event in all_inputs:
@@ -2409,7 +2458,7 @@ class NotebookContext:
                             f"    - {event_name} ({event_optional})")
                         model_desc.append(f"      Description: {event_desc}")
 
-                # 描述输出数据
+                # Describe output data
                 if all_outputs:
                     model_desc.append("  Generated Outputs:")
                     for event in all_outputs:
@@ -2419,16 +2468,16 @@ class NotebookContext:
                         model_desc.append(f"    - {event_name}")
                         model_desc.append(f"      Description: {event_desc}")
 
-                # 将该模型的描述添加到总描述中
+                # Add this model's description to total description
                 model_descriptions.extend(model_desc)
 
-            # 添加总结性述
+            # Add summary statement
             model_descriptions.append(
                 "\nThese models can be used for various computational tasks based on their specific purposes and requirements.")
             model_descriptions.append(
                 "Each model has specific input requirements and generates corresponding outputs.")
 
-            # 将所有描述组合成一个字符串
+            # Combine all descriptions into a single string
             return "\n".join(model_descriptions)
 
         except Exception as e:
@@ -2436,19 +2485,19 @@ class NotebookContext:
             return "Failed to analyze model repository context due to an error."
 
     def _get_modeling_history_context(self):
-        """获取建模历史上下文信息，包括代码和Markdown内容"""
+        """Get modeling history context information, including code and Markdown content"""
         try:
-            # 获取IPython shell实例
+            # Get IPython shell instance
             get_ipython = _lazy_import_ipython()
             ipython = get_ipython()
             if ipython is None:
                 raise RuntimeError(
                     "This function must be run in an IPython environment")
 
-            # 获取当前工作目录
+            # Get current working directory
             current_dir = os.getcwd()
 
-            # 查找最新的ipynb文件
+            # Find the latest ipynb file
             notebook_path = None
             latest_time = 0
             for root, dirs, files in os.walk(current_dir):
@@ -2460,10 +2509,10 @@ class NotebookContext:
                             latest_time = mod_time
                             notebook_path = file_path
 
-            # 记录所有内容
+            # Record all content
             history_desc = []
 
-            # 如果找到notebook文件
+            # If notebook file found
             if notebook_path:
                 try:
                     import nbformat
@@ -2471,25 +2520,25 @@ class NotebookContext:
 
                     for cell in notebook.cells:
                         if cell.cell_type == 'code':
-                            if cell.source.strip():  # 忽略空单元格
+                            if cell.source.strip():  # Skip empty cells
                                 history_desc.append(
                                     f"Code Cell:\n{cell.source}")
                         elif cell.cell_type == 'markdown':
-                            if cell.source.strip():  # 忽略空单元格
+                            if cell.source.strip():  # Skip empty cells
                                 history_desc.append(
                                     f"Markdown Cell:\n{cell.source}")
                 except Exception as e:
                     print(
                         f"Warning: Could not read notebook content: {str(e)}")
 
-            # 获取命令历史
+            # Get command history
             code_history = list(
                 ipython.history_manager.get_range(output=False))
             for session, line_number, code in code_history:
-                if code.strip():  # 忽略空行
+                if code.strip():  # Skip empty lines
                     history_desc.append(f"In [{line_number}]: {code}")
 
-            # 将所有描述组合成一个字符串
+            # Combine all descriptions into a single string
             return "\n\n".join(history_desc)
 
         except Exception as e:
@@ -2497,5 +2546,5 @@ class NotebookContext:
             return "Failed to analyze modeling history due to an error."
 
 
-# 向后兼容别名
+# Backwards compatibility alias
 ModelGUI = GeoModeler

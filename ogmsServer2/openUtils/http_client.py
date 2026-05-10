@@ -2,7 +2,7 @@ import httpx
 from typing import Optional, Dict, Any, Union, Tuple
 import asyncio
 
-# 类型别名
+# Type aliases
 Headers = Dict[str, str]
 Files = Dict[str, Tuple[str, Any]]
 
@@ -32,7 +32,7 @@ class HttpClient:
                     headers=headers,
                 )
                 print
-                response.raise_for_status()  # 检查 HTTP 错误
+                response.raise_for_status()  # Check for HTTP errors
                 if downloadFile:
                     return {
                         "status_code": response.status_code,
@@ -45,7 +45,7 @@ class HttpClient:
                     "json": response.json(),
                 }
         except httpx.TimeoutException:
-            # 处理超时错误
+            # Handle timeout error
             return {"status_code": None, "headers": None, "error": "Request timed out"}
         except httpx.HTTPStatusError as e:
             return {
@@ -165,14 +165,14 @@ class HttpClient:
                     params=params,
                     headers=headers,
                 )
-                response.raise_for_status()  # 检查 HTTP 错误
+                response.raise_for_status()  # Check for HTTP errors
                 return {
                     "status_code": response.status_code,
                     "headers": dict(response.headers),
                     "json": response.json(),
                 }
         except httpx.TimeoutException:
-            # 处理超时错误
+            # Handle timeout error
             return {"status_code": None, "headers": None, "error": "Request timed out"}
         except httpx.HTTPStatusError as e:
             return {

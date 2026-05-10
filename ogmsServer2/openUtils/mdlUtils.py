@@ -7,7 +7,7 @@ LastEditTime: 2024-09-09 21:25:48
 
 
 class MDL:
-    # TODO:应该为动态IP
+    # TODO: Should use dynamic IP
     def __init__(self):
         self.ip = "172.21.252.204"
         self.port = 8061
@@ -18,7 +18,7 @@ class MDL:
             self.origin_lists = self.parse_model_data(mdlData)
             return self.origin_lists
         else:
-            # TODO: 处理无mdl的情况
+            # TODO: Handle case when mdl is missing
             return None
 
     ####################### private#######################

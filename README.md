@@ -1,21 +1,17 @@
 # PyGeoModel
 
-[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) 
-<!-- 
+[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/)
+
+<!--
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接) -->
 
 An intelligent Python package for urban modeling within Jupyter 🌱
 
 <table>
   <tr>
-    <td colspan="3"><a href="您的演示链接"><img width="100%" src='statics/showModels.png'></a></td>
+    <td colspan="3"><img width="100%" src='statics/showModels.png'></a></td>
   </tr>
   <tr></tr>
-  <!-- <tr align="center">
-    <td><a href="您的演示链接">🚀 Live Demo</a></td>
-    <td><a href="您的视频链接">📺 Talk Video</a></td>
-    <td><a href="您的论文链接">📖 Research Paper</a></td>
-  </tr> -->
 </table>
 
 ## What is PyGeoModel?
@@ -67,8 +63,6 @@ For a live demo, visit: <您的演示链接>. -->
 ### Computational Notebook
 
 If you use computational notebooks (e.g., Jupyter Notebook, JupyterLab, Google Colab, VS Code Notebook), you can easily use PyGeoModel via its Python Package.
-
-<!-- Visit this [Colab Notebook](您的Colab链接) for a demo. -->
 
 ```python
 # Install PyGeoModel

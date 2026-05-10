@@ -19,7 +19,7 @@ class OGMSTask(Service):
         self.origin_lists = origin_lists
         self.subscirbe_lists = {}
         self.tid = None
-        # 对输入的参数进行校验、文件上传等操作
+        # Validate input parameters, upload files, etc.
 
     def wait4Status(self, timeout: int = 7200):
         try:
@@ -35,9 +35,8 @@ class OGMSTask(Service):
                 "outputs": self.outputs,
             }
 
-        except NotValueError or modelStatusError as e:
-            print(e)
-            exit(1)
+        except (NotValueError, modelStatusError) as e:
+            raise RuntimeError(f"Model execution failed: {e}")
 
     def configInputData(self, params: dict):
         try:
@@ -45,9 +44,8 @@ class OGMSTask(Service):
             lists = {"inputs": self._uploadData(
                 params), "username": self.username}
             return self._mergeData(lists)
-        except NotValueError or UploadFileError or MDLVaildParamsError as e:
-            print(e)
-            exit(1)
+        except (NotValueError, UploadFileError, MDLVaildParamsError) as e:
+            raise RuntimeError(f"Failed to configure input data: {e}")
 
     ######################## private################################
     def _uploadData(self, pathList: dict):
@@ -55,9 +53,9 @@ class OGMSTask(Service):
         for category, files in pathList.items():
             inputs[category] = {}
             for key, value in files.items():
-                # 判断是数值参数还是文件参数
+                # Check if it's a numeric parameter or file parameter
                 if isinstance(value, (str, int, float)) and not str(value).startswith('/'):
-                    # 数值参数：生成XML，上传并返回url；同时保留children用于填充值
+                    # Numeric parameter: generate XML, upload and return URL; keep children for value filling
                     xml_content = self._create_value_xml(str(key), str(value))
                     xml_url = self._upload_xml_string(
                         xml_content, f"{key}.xml")
@@ -67,7 +65,7 @@ class OGMSTask(Service):
                         "children": [{str(key): str(value)}],
                     }
                 else:
-                    # 文件参数：上传文件并获取URL
+                    # File parameter: upload file and get URL
                     file_path = str(value)
                     file_name = file_path.split("/")[-1]
                     inputs[category][key] = {
@@ -93,13 +91,13 @@ class OGMSTask(Service):
         raise UploadFileError()
 
     def _create_value_xml(self, name: str, value: str) -> str:
-        """根据数值参数生成与服务端兼容的XML内容。"""
-        # 参考 testify 目录示例：
+        """Generate XML content compatible with server for numeric parameters."""
+        # Reference from testify directory example:
         # <Dataset> <XDO name="system_efficiency" kernelType="string" value="0.8" /> </Dataset>
         return f'<Dataset> <XDO name="{name}" kernelType="string" value="{value}" /> </Dataset>'
 
     def _upload_xml_string(self, xml_content: str, filename: str) -> str:
-        """将XML字符串写入临时文件并复用文件上传接口，返回url。"""
+        """Write XML string to temp file and use file upload interface, return URL."""
         import tempfile
         import os
 
@@ -114,26 +112,26 @@ class OGMSTask(Service):
 
     def _mergeData(self, params: dict):
         def extract_file_suffix(filename: str) -> str:
-            """提取文件名的后缀名."""
+            """Extract file extension from filename."""
             return filename.split(".")[-1] if "." in filename else ""
 
         def update_input_item(input_item: dict, event_data: dict):
             """
-            根据 input_data 中的 event_data 更新 origin_data 中的 input_item。
-            支持处理直接传递的 'value' 字段和children结构。
+            Update input_item in origin_data with event_data from input_data.
+            Supports direct 'value' fields and children structures.
             """
-            # ✅ 处理直接传递value的情况（数值参数）
+            # Handle direct value passing (numeric parameters)
             if "value" in event_data and "url" not in event_data:
-                # 数值参数：如 {"value": "0.8"}
+                # Numeric parameter: e.g. {"value": "0.8"}
                 if "children" in input_item and input_item["children"]:
                     child = input_item["children"][0]
                     child["value"] = event_data["value"]
-                    input_item["suffix"] = "xml"  # 数值参数使用xml格式
-                return  # 早返回，避免执行后面的逻辑
+                    input_item["suffix"] = "xml"  # Numeric parameters use xml format
+                return  # Early return to avoid executing following logic
 
-            # 原有的处理逻辑
+            # Original processing logic
             if "children" in event_data:
-                input_item["suffix"] = "xml"  # 如果有 children，后缀名固定为 xml
+                input_item["suffix"] = "xml"  # If children exists, suffix is fixed to xml
                 for child in input_item.get("children", []):
                     event_name = child["eventName"]
                     for b_child in event_data["children"]:
@@ -148,7 +146,7 @@ class OGMSTask(Service):
                 input_item["url"] = event_data["url"]
 
         def fill_data_with_input(input_data: dict, origin_data: dict) -> dict:
-            """根据 input_data 填补 origin_data."""
+            """Fill origin_data with input_data."""
             for input_item in origin_data.get("inputs", []):
                 state_name = input_item.get("statename")
                 event_name = input_item.get("event")
@@ -170,33 +168,33 @@ class OGMSTask(Service):
             errors = []
             event_name = f"{event.get('statename')}-{event.get('event')}"
 
-            # 检查是否是数值参数（有children但没有url）
+            # Check if it's a numeric parameter (has children but no URL)
             is_numeric_param = "children" in event and not event.get("url")
 
             if event.get("optional") == "False":
-                # 必填项
+                # Required field
                 if is_numeric_param:
-                    # 数值参数：只检查children和suffix
+                    # Numeric parameter: only check children and suffix
                     if not event.get("suffix"):
-                        errors.append(f"{event_name}的文件格式有误！")
+                        errors.append(f"{event_name} has invalid file format!")
                     for child in event["children"]:
                         if not child.get("value"):
-                            errors.append(f"{event_name}子参数有误")
+                            errors.append(f"{event_name} has invalid child parameter")
                 else:
-                    # 文件参数：检查url和suffix
+                    # File parameter: check url and suffix
                     if not event.get("url"):
-                        errors.append(f"{event_name}的中转数据信息有误！")
+                        errors.append(f"{event_name} has invalid transfer data!")
                     if not event.get("suffix"):
-                        errors.append(f"{event_name}的文件有误！")
+                        errors.append(f"{event_name} has invalid file!")
             elif event.get("optional") == "True":
-                # 选填项
+                # Optional field
                 if event.get("url") or event.get("suffix") or "children" in event:
                     if not (event.get("url") and event.get("suffix")):
-                        errors.append(f"{event_name}子参数有误！")
+                        errors.append(f"{event_name} has invalid child parameter!")
                     if "children" in event:
                         for child in event["children"]:
                             if not child.get("value"):
-                                errors.append(f"{event_name}子参数不能为空！")
+                                errors.append(f"{event_name} child parameter cannot be empty!")
 
             return errors
 
@@ -226,15 +224,15 @@ class OGMSTask(Service):
 
         errors = check_username(merge_data.get("username"))
 
-        # 处理 inputs
+        # Process inputs
         valid_inputs, input_errors = process_inputs(
             merge_data.get("inputs", []))
         errors.extend(input_errors)
 
-        # 更新数据
+        # Update data
         merge_data["inputs"] = valid_inputs
 
-        # 打印错误信息
+        # Print error messages
         if errors:
             raise MDLVaildParamsError("\n".join(errors))
         else:
@@ -279,10 +277,9 @@ class OGMSAccess(Service):
         self.modelName = modelName
         self.outputs = []
         if self._checkModelService(pid=self._checkModel(modelName=modelName)):
-            print("Model service is ready!")
+            print("✅ Model service is ready!")
         else:
-            print("Model service is not ready, please try again later!")
-            exit(1)
+            raise RuntimeError(f"Model service '{modelName}' is not ready. Please try again later.")
 
     def createTask(self, params: dict):
         PV.v_empty(params, "Params")
@@ -298,7 +295,7 @@ class OGMSAccess(Service):
         downloadFilesNum = 0
         downlaodedFilesNum = 0
         if not self.outputs:
-            print("没有可下载的数据")
+            print("No data available for download")
             return False
 
         for output in self.outputs:
@@ -306,7 +303,7 @@ class OGMSAccess(Service):
             event = output["event"]
             url = output["url"]
             suffix = output["suffix"]
-            # 构建文件名
+            # Build filename
             base_filename = f"{statename}-{event}"
             filename = f"{base_filename}.{suffix}"
             counter = 1
@@ -317,13 +314,13 @@ class OGMSAccess(Service):
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
 
-            # 检查文件是否存在
+            # Check if file already exists
             while os.path.exists(file_path):
                 filename = f"{base_filename}_{counter}.{suffix}"
                 file_path = "./data/" + self.modelName + "_" + s_id + "/" + filename
                 counter += 1
             downloadFilesNum = downloadFilesNum + 1
-            # 下载文件并保存
+            # Download and save file
             content = HttpClient.hander_response(HttpClient.get_file_sync(url=url)).get(
                 "content", {}
             )
