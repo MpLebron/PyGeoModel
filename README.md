@@ -1,121 +1,74 @@
 # PyGeoModel
 
-[![license](https://img.shields.io/badge/License-MIT-blue)](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE) [![pypi](https://img.shields.io/pypi/v/PyGeoModel?color=yellow)](https://pypi.org/project/PyGeoModel/) 
-<!-- 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](您的Colab链接) [![arxiv badge](https://img.shields.io/badge/arXiv-2501.xxxxx-red)](您的论文链接) -->
+PyGeoModel is a Python package for integrating OpenGMS geographic model services into Python-based urban data science workflows. It provides programmatic access to model-service discovery, metadata inspection, service invocation, and result management. For exploratory notebook-based analysis, PyGeoModel also provides an optional Jupyter interface built on the same core API.
 
-An intelligent Python package for urban modeling within Jupyter 🌱
+## Installation
 
-<table>
-  <tr>
-    <td colspan="3"><a href="您的演示链接"><img width="100%" src='statics/showModels.png'></a></td>
-  </tr>
-  <tr></tr>
-  <!-- <tr align="center">
-    <td><a href="您的演示链接">🚀 Live Demo</a></td>
-    <td><a href="您的视频链接">📺 Talk Video</a></td>
-    <td><a href="您的论文链接">📖 Research Paper</a></td>
-  </tr> -->
-</table>
-
-## What is PyGeoModel?
-
-PyGeoModel is an intelligent urban modeling toolkit that provides **smart model recommendations** and **interactive GUI interfaces** for Jupyter Notebook environments.
-With AI-powered model suggestions, contextual academic knowledge integration, and intuitive parameter configuration, PyGeoModel empowers researchers and practitioners to conduct geographic modeling more efficiently and intelligently.
-
-<table>
-  <td colspan="3">Components</td>
-  <tr></tr>
-  <tr>
-    <td>🧠</td>
-    <td><strong>Smart Model Recommender</strong></td>
-    <td>AI-driven model suggestions based on user context and data</td>
-  </tr>
-  <tr></tr>
-  <tr>
-  <td>🖥️</td>
-    <td><strong>Interactive GUI</strong></td>
-    <td>Intuitive ipywidgets-based interface for model configuration</td>
-  </tr>
-  <tr></tr>
-  <tr>
-  <td>🤖</td>
-    <td><strong>QA Assistant</strong></td>
-    <td>Intelligent question-answering system for model guidance</td>
-  </tr>
-  <tr></tr>
-  <tr>
-  <td>📊</td>
-    <td><strong>Model Execution Engine</strong></td>
-    <td>Seamless integration with OGMS computational services</td>
-  </tr>
-  <tr></tr>
-  <tr>
-  <td>📚</td>
-    <td><strong>Academic Integration</strong></td>
-    <td>Real-time academic paper search and knowledge synthesis</td>
-  </tr>
-  <tr></tr>
-</table>
-
-## Get Started
-
-<!-- ### Live Demo
-
-For a live demo, visit: <您的演示链接>. -->
-
-### Computational Notebook
-
-If you use computational notebooks (e.g., Jupyter Notebook, JupyterLab, Google Colab, VS Code Notebook), you can easily use PyGeoModel via its Python Package.
-
-<!-- Visit this [Colab Notebook](您的Colab链接) for a demo. -->
-
-```python
-# Install PyGeoModel
-!pip install PyGeoModel
-
-from PyGeoModel import GeoModeler
-
-# Create the intelligent modeling assistant
-modeler = GeoModeler()
-
-# Browse and select from available models
-modeler.show_models()
-
-# Get AI-powered model recommendations
-modeler.suggest_model()
-
-# Work with a specific model
-modeler.invoke_model("SWAT_Model")
+```bash
+pip install PyGeoModel
 ```
 
-## How is PyGeoModel Built?
+Use the package in Python with:
 
-PyGeoModel is built with a modular architecture that combines [ipywidgets](https://ipywidgets.readthedocs.io/) for interactive interfaces, [asyncio](https://docs.python.org/3/library/asyncio.html) for asynchronous operations, and integration with external services. PyGeoModel uses [OpenAI API](https://openai.com/api/) and [Dify API](https://dify.ai/) for intelligent recommendations. The model execution is powered by [OGMS](http://geomodeling.njnu.edu.cn/) (Open Geographic Modeling Service). The academic integration leverages [Consensus API](https://consensus.app/) for real-time paper search. The computational notebook support is optimized for [Jupyter](https://jupyter.org/) environments.
+```python
+from pygeomodel import GeoModeler
+```
 
-## Credits
+## Core API
 
-PyGeoModel is a result of collaboration between researchers from multiple institutions. PyGeoModel is created by <a href='mailto:llonggis@163.com' target='_blank'>Peilong Ma</a>, Min Chen, Dichen Liu, and other contributors from Nanjing Normal University.
+```python
+from pygeomodel import GeoModeler
 
-<!-- ## Citation
+modeler = GeoModeler()
 
-To learn more about PyGeoModel, please read our [research paper](您的论文链接).
+models = modeler.search_models("photovoltaic")
+model = modeler.get_model("Roof Photovoltaic Carbon Emission Reduction Potential Assessment Model")
 
-```bibtex
-@article{
-  title={PyGeoModel: A Python Package for Integrating Intelligent Geographic Model Services into Jupyter},
-  author={Peilong Ma, Min Chen, Dichen Liu, Wei Xie, Tianyu Sheng, Yongning Wen, Songshan Yue, Guonian Lv},
-  journal={arXiv},
-  year={2025},
-  url={您的论文链接}
-}
-``` -->
+print(model.description)
+print(model.inputs)
+print(model.outputs)
+```
 
-## License
+Model services can be invoked programmatically:
 
-- The software is available under the [MIT License](https://github.com/MpLebron/PyGeoModel/blob/main/LICENSE).
-- The model configurations and examples are provided for research and educational purposes.
+```python
+result = modeler.invoke(
+    "Roof Photovoltaic Carbon Emission Reduction Potential Assessment Model",
+    params={
+        "system_efficiency": 0.8,
+        "start_time": "2018-01",
+        "end_time": "2018-12",
+        "roof_vector_path": "data/rooftops.zip",
+    },
+)
 
-## Contact
+saved_files = result.save(output_dir="data/result/live_run")
+```
 
-If you have any questions, feel free to open an issue or contact [Peilong Ma](mailto:llonggis@163.com).
+The model configuration is recorded directly in the Python cell through the explicit `params` dictionary, while `TaskResult.save()` stores the downloadable model outputs for subsequent analysis.
+
+## Notebook Interface
+
+```python
+modeler.show_models()
+modeler.invoke_model("Roof Photovoltaic Carbon Emission Reduction Potential Assessment Model")
+```
+
+The notebook interface renders model search, metadata inspection, parameter entry, task execution, and output display. It uses the same `search_models()`, `get_model()`, and `invoke()` functions as the programmatic API so GUI operations can be converted into explicit Python parameters and saved model outputs when needed.
+
+## Recommendation and Q&A
+
+```python
+recommendation = modeler.suggest_model()
+
+answer = modeler.ask_model(
+    "Roof Photovoltaic Carbon Emission Reduction Potential Assessment Model",
+    "What input data are required?",
+)
+```
+
+The recommendation service automatically builds notebook/data context and calls the configured recommendation workflow. Q&A uses OpenGMS model metadata and an OpenAI-compatible web-enabled model. The main notebook workflow is designed to run out of the box for demonstration use.
+
+## Relation to OpenGMS
+
+OpenGMS provides the model-service platform and online execution infrastructure. PyGeoModel is a Python client package that exposes OpenGMS model-service discovery, metadata inspection, task invocation, and result management to Python and notebook workflows.

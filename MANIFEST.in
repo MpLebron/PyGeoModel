@@ -1,11 +1,9 @@
 include README.md
 include LICENSE
-include data/*.json
-include data/*.txt
-recursive-include ogmsServer2/data *.tif
-recursive-include ogmsServer2/data */*.tif
-exclude __pycache__
-exclude *.py[co]
-exclude .DS_Store
-
-
+recursive-include pygeomodel/data *.json *.txt *.csv
+global-exclude __pycache__/*
+global-exclude *.py[co]
+global-exclude *.pyd
+global-exclude *.c
+global-exclude .DS_Store
+global-exclude config/api_keys.json

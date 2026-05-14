@@ -12,7 +12,7 @@ LastEditors: DiChen
 LastEditTime: 2024-09-08 16:23:59
 """
 
-# 定义状态常量
+# Define state constants
 STATE_INIT = 0b1  # 1: init
 STATE_RUNNING = 0b10  # 2: running
 STATE_COMPLETED = 0b100  # 4: completed

@@ -11,18 +11,17 @@ def read_readme():
 
 setup(
     name="PyGeoModel",
-    version="1.0.4",
-    author="Your Name",  # 请替换为您的姓名
-    author_email="your.email@example.com",  # 请替换为您的邮箱
-    description="An intelligent Python toolkit for geographic modeling with smart model recommendations",
+    version="1.0.15",
+    author="Peilong Ma",
+    author_email="mpl_gis@nnu.edu.cn",
+    description="A Python package for integrating OpenGMS geographic model services.",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/PyGeoModel",  # 请替换为您的GitHub仓库
+    url="https://github.com/MpLebron/PyGeoModel",
     py_modules=["scripts"],
-    packages=find_packages(),
+    packages=find_packages(include=["pygeomodel", "pygeomodel.*", "ogmsServer2", "ogmsServer2.*"]),
     package_data={
-        'PyGeoModel': ['data/*.json', 'data/*.txt'],
-        'ogmsServer2': ['data/*.tif', 'data/*/*.tif'],
+        'pygeomodel': ['data/*.json', 'data/*.txt', 'data/*.csv'],
     },
     include_package_data=True,
     install_requires=[
@@ -37,9 +36,11 @@ setup(
         "nbformat>=5.1.0",
         "tenacity>=8.0.0"
     ],
+    extras_require={
+        "test": ["pytest>=8.0"],
+    },
     python_requires=">=3.8",
     classifiers=[
-        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: GIS",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -50,5 +51,5 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
     ],
-    keywords="geographic modeling, GIS, machine learning, model recommendation, geospatial analysis, jupyter",
+    keywords="geographic modeling, GIS, OpenGMS, model services, geospatial analysis, jupyter",
 )

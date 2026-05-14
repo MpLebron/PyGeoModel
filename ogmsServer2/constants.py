@@ -5,11 +5,16 @@ LastEditors: DiChen
 LastEditTime: 2024-09-10 18:54:56
 """
 
+import os
+
 ###################### configPath######################
-basePortalUrl = "http://222.192.7.75"
-# basePortalUrl = "http://172.21.212.251:7777"
-baseManagerUrl = "http://222.192.7.75/managerServer"
-baseDataUrl = "http://222.192.7.75/dataTransferServer"
+basePortalUrl = os.environ.get("OGMS_BASE_PORTAL_URL", "http://222.192.7.75")
+baseManagerUrl = os.environ.get(
+    "OGMS_BASE_MANAGER_URL", "http://222.192.7.75/managerServer"
+)
+baseDataUrl = os.environ.get(
+    "OGMS_BASE_DATA_URL", "http://222.192.7.75/dataTransferServer"
+)
 
 
 ###################### apiPath########################

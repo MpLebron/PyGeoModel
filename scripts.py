@@ -1,18 +1,24 @@
 import requests
 import tenacity
 from openai import OpenAI
+from pygeomodel.config import get_llm_config
 
 
 class AcademicQueryService:
-    def __init__(self, api_key: str = "sk-4bp5a1DcdLSHCiw1401270055f47424b9eA58cAd587266A3",
+    def __init__(self, api_key: str = None,
                  modelingContext: str = "",
-                 base_url: str = "https://aihubmix.com/v1"):
+                 base_url: str = None):
+        # Use config if no explicit keys provided
+        if api_key is None or base_url is None:
+            default_config = get_llm_config()
+            api_key = api_key or default_config.openai_api_key
+            base_url = base_url or default_config.openai_base_url
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.modelingContext = modelingContext
 
     async def get_academic_question_answer(self, query: str) -> dict:
         """
-        获取学术问题的答案（这是对外暴露的主要接口）
+        Get answer to an academic question (main public interface).
         """
         paper_list = await self._get_academic_question_answer_list(query)
         question_answer = await self._get_openai_summary(query, paper_list)
@@ -24,9 +30,9 @@ class AcademicQueryService:
 
     @tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(5))
     async def _get_academic_question_answer_list(self, query: str, page: int = 1, size: int = 10) -> list:
-        """内部方法：获取论文列表 - 使用新的两步调用流程"""
+        """Internal: Get paper list using two-step API flow."""
         try:
-            # 第一步：创建搜索线程，获取 search_id
+            # Step 1: Create search thread to get search_id
             search_url = "https://consensus.app/api/threads/"
             search_payload = {
                 "user_message": query,
@@ -47,13 +53,13 @@ class AcademicQueryService:
                 search_url, json=search_payload, headers=search_headers, timeout=15)
 
             if search_response.status_code not in [200, 201]:
-                # 降级到直接查询方式
+                # Fallback to direct query
                 return await self._fallback_direct_query(query, page, size)
 
             search_data = search_response.json()
             search_id = None
 
-            # 尝试从不同位置获取search_id
+            # Try to get search_id from different locations
             if 'search_id' in search_data:
                 search_id = search_data['search_id']
             elif 'interactions' in search_data and len(search_data['interactions']) > 0:
@@ -63,7 +69,7 @@ class AcademicQueryService:
             if not search_id:
                 return await self._fallback_direct_query(query, page, size)
 
-            # 第二步：使用 search_id 获取论文结果
+            # Step 2: Use search_id to fetch paper results
             papers_url = f"https://consensus.app/api/paper_search/{search_id}/?page={page-1}&size={size}"
             papers_headers = {
                 'Referer': 'https://consensus.app',
@@ -83,11 +89,11 @@ class AcademicQueryService:
             return papers[:size]
 
         except Exception as e:
-            # 降级到直接查询方式
+            # Fallback to direct query
             return await self._fallback_direct_query(query, page, size)
 
     async def _fallback_direct_query(self, query: str, page: int = 1, size: int = 10) -> list:
-        """降级方案：直接查询论文（原来的方法）"""
+        """Fallback: Direct paper query (legacy approach)."""
         try:
             url = "https://consensus.app/api/paper_search/?query=" + \
                 query + "&page=" + str(page) + "&size=" + str(size)
@@ -106,10 +112,10 @@ class AcademicQueryService:
             return []
 
     async def _get_openai_summary(self, query: str, paper_list: list) -> str:
-        """内部方法：获取 OpenAI 总结"""
+        """Internal: Get OpenAI summary of papers."""
         paperContext = ""
         for paper in paper_list:
-            # 组织成，这是一篇名为<title>的论文，发表在<journal>上，相关的内容为<display_text>。
+            # Build context string with paper title, journal, and content
             paperContext += "This is a paper named: " + \
                 paper["title"] + " published in: " + paper["journal"] + \
                 ". The related content is: " + paper["display_text"] + "."
