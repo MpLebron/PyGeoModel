@@ -24,20 +24,32 @@ class MDL:
     ####################### private#######################
 
     def parse_model_data(self, mdl_data: dict):
+        def get_udx_nodes(node):
+            if not isinstance(node, dict):
+                return []
+            return node.get("UdxNode") or node.get("UDXNode") or []
+
         def extract_children(udx_node):
-            return [
-                {
-                    "eventId": child["name"],
-                    "eventName": child["name"],
-                    "eventDesc": child["name"],
-                    "eventType": child["type"]
-                    .replace("DTKT_", "")
-                    .replace("REAL", "FLOAT"),
-                    "child": "true",
-                    "value": "",
-                }
-                for child in udx_node.get("UdxNode", [])
-            ]
+            children = []
+            for child in get_udx_nodes(udx_node):
+                nested = get_udx_nodes(child)
+                if nested:
+                    children.extend(extract_children(child))
+                    continue
+                name = child.get("name", "")
+                children.append(
+                    {
+                        "eventId": name,
+                        "eventName": name,
+                        "eventDesc": child.get("description") or name,
+                        "eventType": child.get("type", "")
+                        .replace("DTKT_", "")
+                        .replace("REAL", "FLOAT"),
+                        "child": "true",
+                        "value": "",
+                    }
+                )
+            return children
 
         def process_event(event, evt, dataset_item, data, is_input=True):
             entry_type = "inputs" if is_input else "outputs"
@@ -60,14 +72,10 @@ class MDL:
                     "value": dataset_item.get("externalId", ""),
                 }
 
-            if dataset_item["type"] == "internal" and dataset_item.get(
-                    "UdxDeclaration"
-            ):
-                udx_node = dataset_item["UdxDeclaration"][0].get("UdxNode")
+            if dataset_item["type"] == "internal" and dataset_item.get("UdxDeclaration"):
+                udx_node = get_udx_nodes(dataset_item["UdxDeclaration"][0])
                 if udx_node:
-                    entry["children"] = extract_children(
-                        dataset_item["UdxDeclaration"][0]["UdxNode"][0]
-                    )
+                    entry["children"] = extract_children(udx_node[0])
 
             data[entry_type].append(entry)
 

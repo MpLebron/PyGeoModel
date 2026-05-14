@@ -55,6 +55,18 @@ class OGMSTask(Service):
         for category, files in pathList.items():
             inputs[category] = {}
             for key, value in files.items():
+                if isinstance(value, dict) and "children" in value:
+                    children = self._normalize_xml_children(value.get("children", []))
+                    child_types = self._event_child_types(category, key)
+                    xml_content = self._create_children_xml(children, child_types=child_types)
+                    xml_url = self._upload_xml_string(xml_content, f"{key}.xml")
+                    inputs[category][key] = {
+                        "name": f"{key}.xml",
+                        "url": xml_url,
+                        "children": children,
+                    }
+                    continue
+
                 file_path = Path(str(value)).expanduser() if isinstance(value, str) else None
                 is_file = bool(file_path and file_path.exists())
                 is_scalar = isinstance(value, (str, int, float, bool)) and not is_file
@@ -62,7 +74,8 @@ class OGMSTask(Service):
                 # must be treated as files when they exist on disk.
                 if is_scalar:
                     # Numeric parameter: generate XML, upload and return URL; keep children for value filling
-                    xml_content = self._create_value_xml(str(key), str(value))
+                    child_types = self._event_child_types(category, key)
+                    xml_content = self._create_value_xml(str(key), str(value), child_types=child_types)
                     xml_url = self._upload_xml_string(
                         xml_content, f"{key}.xml")
                     inputs[category][key] = {
@@ -96,11 +109,56 @@ class OGMSTask(Service):
             )
         raise UploadFileError()
 
-    def _create_value_xml(self, name: str, value: str) -> str:
+    def _create_value_xml(self, name: str, value: str, child_types: dict | None = None) -> str:
         """Generate XML content compatible with server for numeric parameters."""
         # Reference from testify directory example:
         # <Dataset> <XDO name="system_efficiency" kernelType="string" value="0.8" /> </Dataset>
-        return f'<Dataset> <XDO name="{name}" kernelType="string" value="{value}" /> </Dataset>'
+        return self._create_children_xml([{name: value}], child_types=child_types)
+
+    def _normalize_xml_children(self, children: list[dict]) -> list[dict[str, str]]:
+        normalized = []
+        for child in children:
+            if not isinstance(child, dict):
+                continue
+            for name, value in child.items():
+                normalized.append({str(name): str(value)})
+        return normalized
+
+    def _create_children_xml(self, children: list[dict], child_types: dict | None = None) -> str:
+        """Generate XML content for internal OpenGMS parameters with child values."""
+        from xml.sax.saxutils import quoteattr
+
+        child_types = child_types or {}
+        nodes = []
+        for child in self._normalize_xml_children(children):
+            for name, value in child.items():
+                kernel_type = self._normalize_kernel_type(child_types.get(name))
+                nodes.append(
+                    f"<XDO name={quoteattr(name)} kernelType={quoteattr(kernel_type)} value={quoteattr(value)} />"
+                )
+        return f"<Dataset> {' '.join(nodes)} </Dataset>"
+
+    def _event_child_types(self, state_name: str, event_name: str) -> dict[str, str]:
+        """Return MDL-declared child kernel types for an input event."""
+        for input_item in self.origin_lists.get("inputs", []):
+            if input_item.get("statename") != state_name or input_item.get("event") != event_name:
+                continue
+            child_types = {}
+            for child in input_item.get("children", []):
+                name = child.get("eventName") or child.get("eventId")
+                event_type = child.get("eventType")
+                if name and event_type:
+                    child_types[str(name)] = str(event_type)
+            return child_types
+        return {}
+
+    def _normalize_kernel_type(self, event_type: str | None) -> str:
+        if not event_type:
+            return "string"
+        normalized = str(event_type).replace("DTKT_", "").strip().lower()
+        if normalized == "real":
+            return "float"
+        return normalized or "string"
 
     def _upload_xml_string(self, xml_content: str, filename: str) -> str:
         """Write XML string to temp file and use file upload interface, return URL."""
@@ -257,8 +315,8 @@ class OGMSTask(Service):
             if res.get("data").get("status") != 2:
                 return res.get("data").get("status")
             else:
-                hasValue = False
-                for output in res["data"]["outputs"]:
+                outputs = res.get("data", {}).get("outputs") or []
+                for output in outputs:
                     if output.get("url") is not None and output.get("url") != "":
                         url = output.get("url")
                         # updated_url = url.replace(
@@ -266,13 +324,9 @@ class OGMSTask(Service):
                         #     "http://geomodeling.njnu.edu.cn/dataTransferServer",
                         # )
                         output["url"] = url
-                        hasValue = True
-                if hasValue is False:
-                    return -1
-                for output in res["data"]["outputs"]:
-                    if "[" in output.get("url"):
+                    if "[" in output.get("url", ""):
                         output["multiple"] = True
-                self.outputs = res["data"]["outputs"]
+                self.outputs = outputs
                 return 2
         return -2
 

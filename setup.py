@@ -11,7 +11,7 @@ def read_readme():
 
 setup(
     name="PyGeoModel",
-    version="1.0.4",
+    version="1.0.14",
     author="Peilong Ma",
     author_email="mpl_gis@nnu.edu.cn",
     description="A Python package for integrating OpenGMS geographic model services.",
@@ -21,7 +21,7 @@ setup(
     py_modules=["scripts"],
     packages=find_packages(include=["pygeomodel", "pygeomodel.*", "ogmsServer2", "ogmsServer2.*"]),
     package_data={
-        'pygeomodel': ['data/*.json', 'data/*.txt'],
+        'pygeomodel': ['data/*.json', 'data/*.txt', 'data/*.csv'],
     },
     include_package_data=True,
     install_requires=[
@@ -41,7 +41,6 @@ setup(
     },
     python_requires=">=3.8",
     classifiers=[
-        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: GIS",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",

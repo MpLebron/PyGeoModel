@@ -5,11 +5,16 @@ from __future__ import annotations
 import time
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlparse, urlunparse
 
 import requests
 
 from .config import OpenGMSConfig, get_opengms_config
+
+
+PUBLIC_DATA_DOWNLOAD_HOST = "geomodeling.njnu.edu.cn"
+PUBLIC_DATA_DOWNLOAD_PREFIX = "/dataTransferServer"
+INTERNAL_DATA_DOWNLOAD_HOSTS = {"221.224.35.86:38083"}
 
 
 class OpenGMSClient:
@@ -105,6 +110,7 @@ def download_output_files(outputs: list[dict[str, Any]], output_dir: str | Path)
         url = output.get("url")
         if not url:
             continue
+        url = normalize_download_url(url)
         suffix = output.get("suffix") or "dat"
         tag = output.get("tag") or output.get("event") or f"output_{index + 1}"
         target = output_path / f"{tag}.{suffix}"
@@ -113,3 +119,19 @@ def download_output_files(outputs: list[dict[str, Any]], output_dir: str | Path)
         target.write_bytes(response.content)
         downloaded.append(str(target))
     return downloaded
+
+
+def normalize_download_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.netloc in INTERNAL_DATA_DOWNLOAD_HOSTS and parsed.path.startswith("/data/"):
+        return urlunparse(
+            (
+                "https",
+                PUBLIC_DATA_DOWNLOAD_HOST,
+                f"{PUBLIC_DATA_DOWNLOAD_PREFIX}{parsed.path}",
+                "",
+                parsed.query,
+                parsed.fragment,
+            )
+        )
+    return url

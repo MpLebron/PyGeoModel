@@ -50,6 +50,8 @@ class ParameterValidator:
 
     @staticmethod
     def v_status(param):
-        if param == -1 or param == -2:
+        if param == -1:
+            raise modelStatusError("model service completed but returned no output data!")
+        if param == -2:
             raise modelStatusError(f"model service calculate error!")
         return param

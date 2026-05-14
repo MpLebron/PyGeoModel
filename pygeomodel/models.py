@@ -37,11 +37,13 @@ def _flatten_leaf_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
 @dataclass
 class ModelSummary:
     name: str
+    display_name: str = ""
     description: str = ""
     author: str = ""
     tags: list[str] = field(default_factory=list)
     model_id: str = ""
     md5: str = ""
+    registry_order: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -80,6 +82,7 @@ class ModelService:
     name: str
     raw: dict[str, Any]
     model_id: str = ""
+    display_name: str = ""
     description: str = ""
     author: str = ""
     tags: list[str] = field(default_factory=list)
@@ -88,6 +91,7 @@ class ModelService:
     states: list[dict[str, Any]] = field(default_factory=list)
     inputs: list[ModelInput] = field(default_factory=list)
     outputs: list[ModelOutput] = field(default_factory=list)
+    registry_order: int = 0
 
     @classmethod
     def from_raw(cls, name: str, raw: dict[str, Any]) -> "ModelService":
@@ -97,12 +101,14 @@ class ModelService:
             name=name,
             raw=raw,
             model_id=raw.get("_id", raw.get("id", "")),
+            display_name=raw.get("_pygeomodel_display_name") or raw.get("display_name_en") or name,
             description=raw.get("description", ""),
             author=raw.get("author", ""),
             tags=list(raw.get("normalTags", []) or []),
             tags_en=list(raw.get("normalTagsEn", []) or []),
             md5=raw.get("md5", ""),
             states=states,
+            registry_order=int(raw.get("_pygeomodel_registry_order") or 0),
         )
         service.inputs = service._parse_inputs()
         service.outputs = service._parse_outputs()
@@ -111,11 +117,13 @@ class ModelService:
     def summary(self) -> ModelSummary:
         return ModelSummary(
             name=self.name,
+            display_name=self.display_name or self.name,
             description=self.description,
             author=self.author,
             tags=self.tags,
             model_id=self.model_id,
             md5=self.md5,
+            registry_order=self.registry_order,
         )
 
     def describe(self) -> str:
@@ -124,12 +132,14 @@ class ModelService:
     def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
+            "display_name": self.display_name or self.name,
             "model_id": self.model_id,
             "description": self.description,
             "author": self.author,
             "tags": self.tags,
             "tags_en": self.tags_en,
             "md5": self.md5,
+            "registry_order": self.registry_order,
             "states": self.states,
             "inputs": [item.to_dict() for item in self.inputs],
             "outputs": [item.to_dict() for item in self.outputs],
@@ -144,18 +154,36 @@ class ModelService:
     def normalize_params(self, params: dict[str, Any]) -> dict[str, dict[str, Any]]:
         normalized: dict[str, dict[str, Any]] = {}
         missing: list[str] = []
-        for item in self.inputs:
-            if item.event_name in normalized.get(item.state, {}):
+        for (state, event_name), items in self._group_inputs_by_event().items():
+            if len(items) == 1:
+                item = items[0]
+                value, found = self._value_for_input(item, params)
+                if not found:
+                    if item.required:
+                        missing.append(item.name)
+                    continue
+                normalized.setdefault(state, {})[event_name] = self._convert_value(value, item)
                 continue
-            value, found = self._value_for_input(item, params)
-            if not found:
-                if item.required:
-                    missing.append(item.name)
-                continue
-            normalized.setdefault(item.state, {})[item.event_name] = self._convert_value(value, item)
+
+            children: list[dict[str, Any]] = []
+            for item in items:
+                value, found = self._value_for_child_input(item, params)
+                if not found:
+                    if item.required:
+                        missing.append(item.name)
+                    continue
+                children.append({item.name: self._convert_value(value, item)})
+            if children:
+                normalized.setdefault(state, {})[event_name] = {"children": children}
         if missing:
             raise ValueError(f"Missing required model parameters: {', '.join(missing)}")
         return normalized
+
+    def _group_inputs_by_event(self) -> dict[tuple[str, str], list[ModelInput]]:
+        grouped: dict[tuple[str, str], list[ModelInput]] = {}
+        for item in self.inputs:
+            grouped.setdefault((item.state, item.event_name), []).append(item)
+        return grouped
 
     def _value_for_input(self, item: ModelInput, params: dict[str, Any]) -> tuple[Any, bool]:
         if item.event_name in params:
@@ -164,14 +192,34 @@ class ModelService:
             return params[item.name], True
         return None, False
 
+    def _value_for_child_input(self, item: ModelInput, params: dict[str, Any]) -> tuple[Any, bool]:
+        if item.name in params:
+            return params[item.name], True
+
+        event_value = params.get(item.event_name)
+        if isinstance(event_value, dict):
+            if item.name in event_value:
+                return event_value[item.name], True
+            for child in event_value.get("children", []) or []:
+                if isinstance(child, dict) and item.name in child:
+                    return child[item.name], True
+
+        return None, False
+
     def _convert_value(self, value: Any, item: ModelInput) -> Any:
         if item.is_file:
             return str(value)
         dtype = (item.data_type or "").upper()
         if dtype in {"REAL", "DOUBLE", "FLOAT"}:
-            return float(value)
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return value
         if dtype in {"INT", "INTEGER"}:
-            return int(value)
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return value
         if dtype in {"BOOL", "BOOLEAN"}:
             if isinstance(value, str):
                 return value.strip().lower() in {"true", "1", "yes", "y"}
@@ -203,7 +251,7 @@ class ModelService:
                         name=event.get("eventName", ""),
                         event_name=event.get("eventName", ""),
                         data_type=data_item.get("dataType", "unknown"),
-                        description=event.get("eventDesc") or data_item.get("desc", ""),
+                        description=self._translate_description(event.get("eventDesc") or data_item.get("desc", "")),
                         children=children,
                     )
                 )
@@ -223,7 +271,7 @@ class ModelService:
                     event_name=event_name if len(leaves) > 1 else node.get("text", event_name),
                     data_type=node.get("dataType", data_item.get("dataType", "STRING")),
                     required=required,
-                    description=node.get("desc") or event.get("eventDesc", ""),
+                    description=self._translate_description(node.get("desc") or event.get("eventDesc", "")),
                     is_file=False,
                     children=nodes,
                 )
@@ -238,7 +286,14 @@ class ModelService:
                 event_name=event_name,
                 data_type=data_type,
                 required=required,
-                description=event.get("eventDesc") or data_item.get("desc", ""),
+                description=self._translate_description(event.get("eventDesc") or data_item.get("desc", "")),
                 is_file=is_file,
             )
         ]
+
+    def _translate_description(self, description: str) -> str:
+        translations = self.raw.get("_pygeomodel_description_translations_en") or {}
+        if not isinstance(translations, dict):
+            return description
+        translated = translations.get(description)
+        return translated if isinstance(translated, str) and translated.strip() else description
