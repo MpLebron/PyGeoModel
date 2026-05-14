@@ -11,7 +11,7 @@ def read_readme():
 
 setup(
     name="PyGeoModel",
-    version="1.0.14",
+    version="1.0.15",
     author="Peilong Ma",
     author_email="mpl_gis@nnu.edu.cn",
     description="A Python package for integrating OpenGMS geographic model services.",

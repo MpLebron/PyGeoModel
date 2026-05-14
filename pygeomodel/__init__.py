@@ -5,7 +5,7 @@ from .modeler import GeoModeler
 from .models import ModelInput, ModelOutput, ModelService, ModelSummary
 from .results import QAResult, RecommendationResult, TaskResult
 
-__version__ = "1.0.14"
+__version__ = "1.0.15"
 
 __all__ = [
     "GeoModeler",

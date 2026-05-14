@@ -124,6 +124,42 @@ class CoreApiTests(unittest.TestCase):
         self.assertEqual(model.display_name, "BES Land Surface Temperature Algorithm")
         self.assertEqual(model.inputs[0].description, "Satellite Brightness of Channel 4")
 
+    def test_english_display_name_resolves_to_original_opengms_name(self):
+        from pygeomodel import GeoModeler
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            catalog_path = tmp_path / "computeModel.json"
+            registry_path = tmp_path / "modellist_2070.csv"
+            catalog_path.write_text(
+                json.dumps(
+                    {
+                        "中文模型": {
+                            "md5": "md5-demo",
+                            "_id": "uid-demo",
+                            "description": "Demo model",
+                            "mdlJson": {"mdl": {"states": []}},
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            registry_path.write_text(
+                "\ufeff序号,MD5,名称,介绍,模型UID,模型参数及说明,是否有示例数据（资源）,display_name_en\n"
+                "1,md5-demo,中文模型,,uid-demo,,,English Demo Model\n",
+                encoding="utf-8",
+            )
+
+            client = FakeClient()
+            modeler = GeoModeler(data_path=catalog_path, client=client)
+            model = modeler.get_model("English Demo Model")
+            result = modeler.invoke("English Demo Model", params={})
+
+        self.assertEqual(model.name, "中文模型")
+        self.assertEqual(model.display_name, "English Demo Model")
+        self.assertEqual(result.model_name, "中文模型")
+        self.assertEqual(client.calls[0][0], "中文模型")
+
     def test_search_and_get_model_parse_metadata(self):
         from pygeomodel import GeoModeler, ModelService
 

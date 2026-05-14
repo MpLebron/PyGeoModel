@@ -29,6 +29,7 @@ class GeoModeler:
         self._uses_custom_data_path = data_path is not None
         self.data_path = self._resolve_data_path(data_path)
         self._models_data = self._load_catalog()
+        self._model_aliases = self._build_model_aliases()
         self.model_names = list(self._models_data.keys())
         self.client = client or OpenGMSClient()
         self.last_result: TaskResult | None = None
@@ -68,9 +69,25 @@ class GeoModeler:
         return [summary for _, _, summary in scored[:limit]]
 
     def get_model(self, model_name: str) -> ModelService:
-        if model_name not in self._models_data:
+        canonical_name = self._canonical_model_name(model_name)
+        return ModelService.from_raw(canonical_name, self._models_data[canonical_name])
+
+    def _canonical_model_name(self, model_name: str) -> str:
+        requested_name = str(model_name or "").strip()
+        canonical_name = self._model_aliases.get(requested_name)
+        if canonical_name is None:
             raise KeyError(f"Model '{model_name}' was not found in the local OpenGMS catalog")
-        return ModelService.from_raw(model_name, self._models_data[model_name])
+        return canonical_name
+
+    def _build_model_aliases(self) -> dict[str, str]:
+        aliases: dict[str, str] = {}
+        for original_name, raw in self._models_data.items():
+            service = ModelService.from_raw(original_name, raw)
+            for alias in (original_name, service.display_name):
+                clean_alias = str(alias or "").strip()
+                if clean_alias:
+                    aliases.setdefault(clean_alias, original_name)
+        return aliases
 
     def invoke(
         self,
@@ -83,7 +100,7 @@ class GeoModeler:
         model = self.get_model(model_name)
         normalized_params = model.normalize_params(params)
         started = time.time()
-        response = self.client.create_task(model_name, normalized_params, wait=wait)
+        response = self.client.create_task(model.name, normalized_params, wait=wait)
         result = TaskResult(
             model_name=model.name,
             model_id=model.model_id,
