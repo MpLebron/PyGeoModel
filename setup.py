@@ -11,13 +11,17 @@ def read_readme():
 
 setup(
     name="PyGeoModel",
-    version="1.0.15",
+    version="1.0.16",
     author="Peilong Ma",
     author_email="mpl_gis@nnu.edu.cn",
     description="A Python package for integrating OpenGMS geographic model services.",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     url="https://github.com/MpLebron/PyGeoModel",
+    project_urls={
+        "Documentation": "https://mplebron.github.io/PyGeoModel-docs/",
+        "Source": "https://github.com/MpLebron/PyGeoModel",
+    },
     py_modules=["scripts"],
     packages=find_packages(include=["pygeomodel", "pygeomodel.*", "ogmsServer2", "ogmsServer2.*"]),
     package_data={
