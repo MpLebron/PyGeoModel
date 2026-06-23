@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+import asyncio
 from pathlib import Path
 
 
@@ -27,6 +28,90 @@ class FakeClient:
 
 
 class CoreApiTests(unittest.TestCase):
+    def test_http_client_sync_methods_use_sixty_second_default_timeout(self):
+        from ogmsServer2.openUtils.http_client import HttpClient
+
+        calls = []
+
+        def fake_make_sync_request(method, url, timeout=60, **kwargs):
+            calls.append((method, timeout, kwargs))
+            return {"status_code": 200, "headers": {}, "json": {}}
+
+        original_make_sync_request = HttpClient._make_sync_request
+        try:
+            HttpClient._make_sync_request = staticmethod(fake_make_sync_request)
+            HttpClient.get_sync("https://example.test/get")
+            HttpClient.get_file_sync("https://example.test/file")
+            HttpClient.post_sync("https://example.test/post")
+            HttpClient.put_sync("https://example.test/put")
+            HttpClient.delete_sync("https://example.test/delete")
+        finally:
+            HttpClient._make_sync_request = original_make_sync_request
+
+        self.assertEqual([call[1] for call in calls], [60, 60, 60, 60, 60])
+
+    def test_http_client_async_methods_use_sixty_second_default_timeout(self):
+        from ogmsServer2.openUtils.http_client import HttpClient
+
+        calls = []
+
+        async def fake_make_async_request(method, url, timeout=60, **kwargs):
+            calls.append((method, timeout, kwargs))
+            return {"status_code": 200, "headers": {}, "json": {}}
+
+        async def run_requests():
+            await HttpClient.get_async("https://example.test/get")
+            await HttpClient.post_async("https://example.test/post")
+            await HttpClient.put_async("https://example.test/put")
+            await HttpClient.delete_async("https://example.test/delete")
+
+        original_make_async_request = HttpClient._make_async_request
+        try:
+            HttpClient._make_async_request = staticmethod(fake_make_async_request)
+            asyncio.run(run_requests())
+        finally:
+            HttpClient._make_async_request = original_make_async_request
+
+        self.assertEqual([call[1] for call in calls], [60, 60, 60, 60])
+
+    def test_opengms_client_metadata_requests_use_sixty_second_timeout(self):
+        import pygeomodel.client as client_module
+        from pygeomodel.client import OpenGMSClient
+
+        calls = []
+
+        class FakeResponse:
+            def __init__(self, payload):
+                self._payload = payload
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return self._payload
+
+        def fake_get(url, params=None, timeout=None):
+            calls.append((url, params, timeout))
+            if url.endswith("/sdk/check_test/"):
+                return FakeResponse({"data": 1})
+            if "/computableModel/ModelInfo_name/" in url:
+                return FakeResponse({"data": {"md5": "model-md5"}})
+            if url.endswith("/GeoModeling/task/verify/model-md5"):
+                return FakeResponse({"data": True})
+            raise AssertionError(f"Unexpected URL: {url}")
+
+        original_get = client_module.requests.get
+        try:
+            client_module.requests.get = fake_get
+            client = OpenGMSClient(token="token")
+            self.assertTrue(client.validate_token())
+            self.assertEqual(client.check_model("Demo Model"), {"md5": "model-md5"})
+            self.assertTrue(client.check_model_service("Demo Model"))
+        finally:
+            client_module.requests.get = original_get
+
+        self.assertEqual([call[2] for call in calls], [60, 60, 60, 60])
+
     def test_catalog_loading_uses_executable_registry_when_available(self):
         from pygeomodel import GeoModeler
 

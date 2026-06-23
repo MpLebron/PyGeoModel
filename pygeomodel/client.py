@@ -33,7 +33,7 @@ class OpenGMSClient:
         response = requests.get(
             f"{self.portal_url}/sdk/check_test/",
             params={"token": self.token},
-            timeout=10,
+            timeout=60,
         )
         response.raise_for_status()
         return response.json().get("data") == 1
@@ -41,7 +41,7 @@ class OpenGMSClient:
     def check_model(self, model_name: str) -> dict[str, Any]:
         response = requests.get(
             f"{self.portal_url}/computableModel/ModelInfo_name/{quote(model_name)}",
-            timeout=15,
+            timeout=60,
         )
         response.raise_for_status()
         return response.json().get("data", {})
@@ -53,7 +53,7 @@ class OpenGMSClient:
             return False
         response = requests.get(
             f"{self.manager_url}/GeoModeling/task/verify/{md5}",
-            timeout=10,
+            timeout=60,
         )
         response.raise_for_status()
         return response.json().get("data") is True

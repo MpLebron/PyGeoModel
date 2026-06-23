@@ -12,7 +12,7 @@ class HttpClient:
     def _make_sync_request(
         method: str,
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         files: Optional[Files] = None,
@@ -76,7 +76,7 @@ class HttpClient:
     @staticmethod
     def get_sync(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
     ) -> Dict[str, Any]:
@@ -87,7 +87,7 @@ class HttpClient:
     @staticmethod
     def get_file_sync(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
     ):
@@ -104,7 +104,7 @@ class HttpClient:
     @staticmethod
     def post_sync(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         files: Optional[Files] = None,
@@ -123,7 +123,7 @@ class HttpClient:
     @staticmethod
     def put_sync(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
@@ -135,7 +135,7 @@ class HttpClient:
     @staticmethod
     def delete_sync(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
     ) -> Dict[str, Any]:
@@ -147,7 +147,7 @@ class HttpClient:
     async def _make_async_request(
         method: str,
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         files: Optional[Files] = None,
@@ -196,7 +196,7 @@ class HttpClient:
     @staticmethod
     async def get_async(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
     ) -> Dict[str, Any]:
@@ -207,7 +207,7 @@ class HttpClient:
     @staticmethod
     async def post_async(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         files: Optional[Files] = None,
@@ -226,7 +226,7 @@ class HttpClient:
     @staticmethod
     async def put_async(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         data: Optional[Union[Dict[str, Any], str, bytes]] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
@@ -238,7 +238,7 @@ class HttpClient:
     @staticmethod
     async def delete_async(
         url: str,
-        timeout: int = 10,
+        timeout: int = 60,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Headers] = None,
     ) -> Dict[str, Any]:
